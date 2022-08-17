@@ -1,5 +1,7 @@
-import { getDeckInstance, addLayer, removeLayer, updateLayer, drawLayer } from './utils';
+// Use fork mapbox layer in deck.gl
+// https://github.com/visgl/deck.gl/tree/master/modules/mapbox
 
+import { getDeckInstance, addLayer, removeLayer, updateLayer, drawLayer } from './utils';
 import type { Deck, Layer } from '@deck.gl/core';
 import { DeckCustomLayer } from './types';
 import type { Map } from '@2gis/mapgl/types';
@@ -31,7 +33,6 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
         this.props = props;
     }
 
-    /* Mapbox custom layer methods */
 
     onAdd = (map: Map, gl: WebGLRenderingContext) => {
         this.map = map;
