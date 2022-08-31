@@ -15,10 +15,12 @@ export function getDeckInstance({
     map,
     gl,
     deck,
+    frame
 }: {
     map: Map & { __deck?: Deck | null };
     gl: WebGLRenderingContext;
     deck?: Deck;
+    frame?: any;
 }): Deck {
     // Only create one deck instance per context
     if (map.__deck) {
@@ -29,6 +31,7 @@ export function getDeckInstance({
 
     const deckProps: DeckProps = {
         useDevicePixels: true,
+        _framebuffer : frame,
         _customRender: (reason: string) => {
             // todo  need change to public rerender method in mapgl
             (map as any)._impl.state.needRerender = true;
@@ -119,6 +122,7 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
         clearStack,
         clearCanvas: false,
     });
+  //  deck.deckRenderer.gl.bindFramebuffer(deck.deckRenderer.gl.FRAMEBUFFER, null)
 }
 
 export function getViewState(map: Map): MapViewState & {
