@@ -4,10 +4,11 @@ import type { Map } from '@2gis/mapgl/types';
 
 import { DeckCustomLayer } from './types';
 import { Deck2gisLayer } from './deckgl2gisLayer';
+import MapglViewport from './mapglViewport';
 
 type UserData = {
     isExternal: boolean;
-    currentViewport?: WebMercatorViewport | null;
+    currentViewport?: MapglViewport | null;
     customLayers: Set<DeckCustomLayer>;
 };
 
@@ -98,13 +99,16 @@ export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
     updateLayers(deck);
 }
 
-export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
+export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>, m?): void {
     let { currentViewport } = deck.userData as UserData;
     let clearStack = false;
     if (!currentViewport) {
         // This is the first layer drawn in this render cycle.
         // Generate viewport from the current map state.
-        currentViewport = getViewport(deck, map, true);
+
+        // Обвертка над вьюпортом WebMercatorViewport
+        // попробовать тут применить наши матрицы проекций на карту и на экран
+        currentViewport = new MapglViewport(getViewport(deck, map, true, m));
         (deck.userData as UserData).currentViewport = currentViewport;
         clearStack = true;
     }
@@ -112,7 +116,10 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
     if (!deck.isInitialized) {
         return;
     }
-
+    // отчистить буфер глубины что бы перекрыть 3д объекты карты
+    //const gl = map.getWebGLContext();
+    //gl.clear(gl.DEPTH_BUFFER_BIT);
+    //gl.clearDepth(0);
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
         layerFilter: ({ layer: deckLayer }) => layer.id === deckLayer.id,
