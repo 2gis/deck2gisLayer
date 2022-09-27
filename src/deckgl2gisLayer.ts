@@ -20,7 +20,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
     props: LayerProps<LayerT>;
 
     /* eslint-disable no-this-before-super */
-    constructor(props: LayerProps<LayerT>) {
+    constructor(props: LayerProps<LayerT> & { renderingMode: '2d' | '3d' }) {
         if (!props.id) {
             throw new Error('Layer must have an unique id');
         }
@@ -33,11 +33,15 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
         this.props = props;
     }
 
-
-    onAdd = (map: Map, gl: WebGLRenderingContext) => {
-        this.map = map;
-        this.deck = getDeckInstance({ map, gl, deck: this.props.deck });
-        addLayer(this.deck, this);
+    onAdd = (map: Map) => {
+        const gl: WebGLRenderingContext = map.getWebGLContext();
+        if (!this.map) {
+            this.map = map;
+            this.deck = getDeckInstance({ map, gl, deck: this.props.deck });
+        }
+        if (this.deck) {
+            addLayer(this.deck, this);
+        }
     };
 
     onRemove = () => {
@@ -57,7 +61,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
 
     render = () => {
         if (this.deck && this.map) {
-            (this.deck as any).userData.currentViewport = undefined;
+            this.deck.props.userData.currentViewport = undefined;
             drawLayer(this.deck!, this.map!, this);
         }
     };

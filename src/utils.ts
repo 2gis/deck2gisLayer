@@ -1,15 +1,11 @@
-import { Deck, WebMercatorViewport, MapView } from '@deck.gl/core';
-import type { Layer, DeckProps, MapViewState } from '@deck.gl/core';
+import { WebMercatorViewport, MapView } from '@deck.gl/core';
+import type { Deck } from '@deck.gl/core';
+import type { Layer } from '@deck.gl/core';
 import type { Map } from '@2gis/mapgl/types';
 
-import { DeckCustomLayer } from './types';
+import { MapViewState } from './types';
 import { Deck2gisLayer } from './deckgl2gisLayer';
-
-type UserData = {
-    isExternal: boolean;
-    currentViewport?: WebMercatorViewport | null;
-    customLayers: Set<DeckCustomLayer>;
-};
+import type { DeckProps } from 'deck.gl';
 
 export function getDeckInstance({
     map,
@@ -19,15 +15,15 @@ export function getDeckInstance({
     map: Map & { __deck?: Deck | null };
     gl: WebGLRenderingContext;
     deck?: Deck;
-}): Deck {
+}): Deck | null {
     // Only create one deck instance per context
     if (map.__deck) {
         return map.__deck;
     }
 
-    const customRender = deck?.props._customRender;
+    const customRender = deck && (deck?.props as any)?._customRender;
 
-    const deckProps: DeckProps = {
+    const deckProps: any = {
         useDevicePixels: true,
         _customRender: (reason: string) => {
             // todo  need change to public rerender method in mapgl
@@ -46,6 +42,10 @@ export function getDeckInstance({
             depthFunc: gl.LEQUAL,
             blendEquation: gl.FUNC_ADD,
         },
+        userData: {
+            isExternal: false,
+            customLayers: new Set(),
+        },
         views: (deck && deck.props.views) || [new MapView({ id: '2gis' })],
     };
 
@@ -56,8 +56,8 @@ export function getDeckInstance({
         // block deck from setting the canvas size
         Object.assign(deckProps, {
             gl,
-            width: null,
-            height: null,
+            width: false,
+            height: false,
             touchAction: 'unset',
             viewState: getViewState(map),
         });
@@ -67,30 +67,24 @@ export function getDeckInstance({
     }
 
     if (deck) {
-        deckInstance = deck;
-        deck.setProps(deckProps);
-        (deck.userData as UserData).isExternal = true;
+        deckInstance = deck as Deck;
+        deckInstance.setProps(deckProps);
+        deckInstance.props.userData.isExternal = false;
     } else {
-        deckInstance = new Deck(deckProps);
-        // todo need wait new mapgl version with this event
-        (map as any).on('destroy', () => {
-            deckInstance.finalize();
-            map.__deck = null;
-        });
+        return null;
     }
 
-    (deckInstance.userData as UserData).customLayers = new Set();
     map.__deck = deckInstance;
     return deckInstance;
 }
 
 export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
-    (deck.userData as UserData).customLayers.add(layer);
+    deck.props.userData.customLayers.add(layer);
     updateLayers(deck);
 }
 
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
-    (deck.userData as UserData).customLayers.delete(layer);
+    deck.props.userData.customLayers.delete(layer);
     updateLayers(deck);
 }
 
@@ -99,24 +93,21 @@ export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
 }
 
 export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
-    let { currentViewport } = deck.userData as UserData;
-    let clearStack = false;
+    let { currentViewport } = deck.props.userData;
     if (!currentViewport) {
         // This is the first layer drawn in this render cycle.
         // Generate viewport from the current map state.
         currentViewport = getViewport(deck, map, true);
-        (deck.userData as UserData).currentViewport = currentViewport;
-        clearStack = true;
+        deck.props.userData.currentViewport = currentViewport;
     }
 
-    if (!deck.isInitialized) {
+    if (!(deck as any).layerManager) {
         return;
     }
 
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
         layerFilter: ({ layer: deckLayer }) => layer.id === deckLayer.id,
-        clearStack,
         clearCanvas: false,
     });
 }
@@ -160,7 +151,7 @@ function getViewport(deck: Deck, map: Map, useMapboxProjection = true): WebMerca
     return new WebMercatorViewport(
         Object.assign(
             {
-                id: 'mapbox',
+                id: '2gis',
                 x: 0,
                 y: 0,
                 width: deck.width,
@@ -190,14 +181,15 @@ function onMapMove(deck: Deck, map: Map): void {
 }
 
 function updateLayers(deck: Deck): void {
-    if ((deck.userData as UserData).isExternal) {
+    if (deck.props.userData.isExternal) {
         return;
     }
 
-    const layers: Layer[] = [];
-    (deck.userData as UserData).customLayers.forEach((deckLayer) => {
+    const layers: Layer<any>[] = [];
+    let layerIndex = 0;
+    deck.props.userData.customLayers.forEach((deckLayer) => {
         const LayerType = deckLayer.props.type;
-        const layer = new LayerType(deckLayer.props);
+        const layer = new LayerType(deckLayer.props, { _offset: layerIndex++ });
         layers.push(layer);
     });
     deck.setProps({ layers });
@@ -252,4 +244,35 @@ function correctViewAndSize(state) {
 function correctScreenHeight(height: number): number {
     const minCalculationScreenHeight = 1000;
     return Math.max(height, minCalculationScreenHeight);
+}
+
+export function initDeck2gisProps(map: Map, deckProps?: DeckProps): DeckProps {
+    const gl = map.getWebGLContext();
+    const deck2gisProps: any = {
+        ...deckProps,
+        parameters: {
+            depthMask: true,
+            depthTest: true,
+            blend: true,
+            blendFunc: [gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA],
+            polygonOffsetFill: true,
+            depthFunc: gl.LEQUAL,
+            blendEquation: gl.FUNC_ADD,
+        },
+        userData: {
+            isExternal: false,
+            customLayers: new Set(),
+        },
+        views: [new MapView({ id: '2gis' })],
+    };
+    // deck is using the WebGLContext created by 2gis
+    // block deck from setting the canvas size
+    Object.assign(deck2gisProps, {
+        gl,
+        width: null,
+        height: null,
+        touchAction: 'unset',
+        viewState: getViewState(map),
+    });
+    return deck2gisProps;
 }
