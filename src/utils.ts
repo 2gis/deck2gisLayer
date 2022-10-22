@@ -56,7 +56,6 @@ export function prepareDeckInstance({
     if (deck) {
         deckInstance = deck as Deck;
         deckInstance.setProps(deckProps);
-        deckInstance.props.userData.isExternal = false;
     } else {
         return null;
     }
@@ -71,6 +70,7 @@ export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
 }
 
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
+    console.log('remove', layer);
     deck.props.userData.customLayers.delete(layer);
     updateLayers(deck);
 }
@@ -120,10 +120,6 @@ function onMapMove(deck: Deck, map: Map): void {
 }
 
 function updateLayers(deck: Deck): void {
-    if (deck.props.userData.isExternal) {
-        return;
-    }
-
     const layers: Layer<any>[] = [];
     let layerIndex = 0;
     deck.props.userData.customLayers.forEach((deckLayer) => {
@@ -148,7 +144,6 @@ export function initDeck2gisProps(map: Map, deckProps?: DeckProps): DeckProps {
             blendEquation: gl.FUNC_ADD,
         },
         userData: {
-            isExternal: false,
             customLayers: new Set(),
             map,
         },
