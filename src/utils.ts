@@ -150,6 +150,7 @@ export function initDeck2gisProps(map: Map, deckProps?: DeckProps): DeckProps {
         userData: {
             isExternal: false,
             customLayers: new Set(),
+            map,
         },
         views: [new MapView({ id: '2gis' })],
     };

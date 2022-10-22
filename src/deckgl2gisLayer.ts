@@ -35,10 +35,11 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
         this.props = props;
     }
 
-    onAdd = (map: Map) => {
-        const gl: WebGLRenderingContext = map.getWebGLContext();
-        if (!this.map) {
+    onAdd = () => {
+        if (!this.map && this.props.deck) {
+            const map = this.props.deck.props.userData.map;
             this.map = map;
+            const gl: WebGLRenderingContext = map.getWebGLContext();
             this.deck = prepareDeckInstance({ map, gl, deck: this.props.deck });
         }
         if (this.deck) {

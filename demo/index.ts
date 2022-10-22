@@ -28,7 +28,7 @@ function initDeckGL() {
     map.addLayer(deckLayer2);
 }
 
-const COLOR_RANGE = [
+const COLOR_RANGE: RGBAColor[] = [
     [1, 152, 189],
     [73, 227, 206],
     [216, 254, 181],
@@ -41,7 +41,7 @@ function createHeatmapLayer(data) {
     const layer = new Deck2gisLayer<HeatmapLayer<any>>({
         id: 'deckgl-HeatmapLayer',
         deck,
-        colorRange: COLOR_RANGE as RGBAColor[],
+        colorRange: COLOR_RANGE,
         type: HeatmapLayer,
         data,
         parameters: { depthTest: false },
@@ -55,7 +55,7 @@ function createHexagonLayer(data) {
     const layer = new Deck2gisLayer<HexagonLayer<any>>({
         id: 'deckgl-HexagonLayer',
         deck,
-        colorRange: COLOR_RANGE as RGBAColor[],
+        colorRange: COLOR_RANGE,
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
