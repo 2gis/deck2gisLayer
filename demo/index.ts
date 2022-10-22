@@ -1,6 +1,6 @@
 import { Deck2gisLayer } from '../src';
 import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
-import { Deck } from '@deck.gl/core';
+import { Deck, RGBAColor } from '@deck.gl/core';
 import { data } from './data';
 import { initDeck2gisProps } from '../src/utils';
 
@@ -22,9 +22,9 @@ map.once('ready', () => {
 });
 
 function initDeckGL() {
-    const deckLayer = createHeatmapLayer(data, map);
+    const deckLayer = createHeatmapLayer(data);
     map.addLayer(deckLayer);
-    const deckLayer2 = createHexagonLayer(data, map);
+    const deckLayer2 = createHexagonLayer(data);
     map.addLayer(deckLayer2);
 }
 
@@ -37,26 +37,25 @@ const COLOR_RANGE = [
     [209, 55, 78],
 ];
 
-function createHeatmapLayer(data, map) {
-    const layer = new Deck2gisLayer({
+function createHeatmapLayer(data) {
+    const layer = new Deck2gisLayer<HeatmapLayer<any>>({
         id: 'deckgl-HeatmapLayer',
         deck,
-        colorRange: COLOR_RANGE,
+        colorRange: COLOR_RANGE as RGBAColor[],
         type: HeatmapLayer,
         data,
         parameters: { depthTest: false },
         getWeight: (d) => d.values.capacity,
         getPosition: (d) => [d.point.lon, d.point.lat],
-    } as any);
-    // todo need add call in map.addLayer(layer) for customLayer
-    layer.onAdd(map);
+    });
+
     return layer;
 }
-function createHexagonLayer(data, map) {
-    const layer = new Deck2gisLayer({
+function createHexagonLayer(data) {
+    const layer = new Deck2gisLayer<HexagonLayer<any>>({
         id: 'deckgl-HexagonLayer',
         deck,
-        colorRange: COLOR_RANGE,
+        colorRange: COLOR_RANGE as RGBAColor[],
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
@@ -65,9 +64,7 @@ function createHexagonLayer(data, map) {
         elevationScale: 2,
         getPosition: (d: any) => [d.point.lon, d.point.lat],
         extruded: true,
-    } as any);
-    // todo need add call in map.addLayer(layer) for customLayer
-    layer.onAdd(map);
+    });
     return layer;
 }
 

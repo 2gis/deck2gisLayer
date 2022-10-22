@@ -1,12 +1,14 @@
 // Use fork mapbox layer in deck.gl
 // https://github.com/visgl/deck.gl/tree/master/modules/mapbox
 
-import { getDeckInstance, addLayer, removeLayer, updateLayer, drawLayer } from './utils';
+import { prepareDeckInstance, addLayer, removeLayer, updateLayer, drawLayer } from './utils';
 import type { Deck, Layer } from '@deck.gl/core';
 import { DeckCustomLayer } from './types';
 import type { Map } from '@2gis/mapgl/types';
 
 export type LayerProps<LayerT extends Layer<any>> = Partial<LayerT['props']> & {
+    id: string;
+    renderingMode?: '2d' | '3d';
     deck: Deck;
     type: any;
 };
@@ -20,7 +22,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
     props: LayerProps<LayerT>;
 
     /* eslint-disable no-this-before-super */
-    constructor(props: LayerProps<LayerT> & { renderingMode?: '2d' | '3d' }) {
+    constructor(props: LayerProps<LayerT>) {
         if (!props.id) {
             throw new Error('Layer must have an unique id');
         }
@@ -37,7 +39,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
         const gl: WebGLRenderingContext = map.getWebGLContext();
         if (!this.map) {
             this.map = map;
-            this.deck = getDeckInstance({ map, gl, deck: this.props.deck });
+            this.deck = prepareDeckInstance({ map, gl, deck: this.props.deck });
         }
         if (this.deck) {
             addLayer(this.deck, this);

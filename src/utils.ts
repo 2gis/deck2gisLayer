@@ -7,7 +7,7 @@ import { Deck2gisLayer } from './deckgl2gisLayer';
 import type { DeckProps } from 'deck.gl';
 import { getViewState, MapglMercatorViewport } from './viewport';
 
-export function getDeckInstance({
+export function prepareDeckInstance({
     map,
     gl,
     deck,
@@ -26,7 +26,7 @@ export function getDeckInstance({
     const customRenderProp: any = {
         useDevicePixels: true,
         _customRender: (reason: string) => {
-            // todo  need change to public rerender method in mapgl
+            // todo  need change to public rerender method in mapgl map.triggerRedraw()
             (map as any)._impl.state.needRerender = true;
             // customRender may be subscribed by DeckGL React component to update child props
             // make sure it is still called
@@ -92,7 +92,7 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
         return;
     }
 
-    stateBinder(map);
+    stateBinder(map, layer);
 
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
@@ -166,9 +166,11 @@ export function initDeck2gisProps(map: Map, deckProps?: DeckProps): DeckProps {
 }
 
 // Fix heatmap layer render: need reset gl state after each draw layers
-function stateBinder(map: Map) {
+function stateBinder(map: Map, layer: Deck2gisLayer<any>) {
     const gl = map.getWebGLContext();
-    gl.disable(gl.CULL_FACE);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
+    if (!layer.props.parameters.cullFaceEnabled) {
+        gl.disable(gl.CULL_FACE);
+    }
     gl.clearDepth(1);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
 }
