@@ -49,6 +49,9 @@ function createHeatmapLayer(data) {
         getPosition: (d) => [d.point.lon, d.point.lat],
     });
 
+    // todo need remove after next mpagl-api release
+    layer.onAdd();
+
     return layer;
 }
 function createHexagonLayer(data) {
@@ -65,6 +68,10 @@ function createHexagonLayer(data) {
         getPosition: (d: any) => [d.point.lon, d.point.lat],
         extruded: true,
     });
+
+    // todo need remove after next mpagl-api release
+    layer.onAdd();
+
     return layer;
 }
 
