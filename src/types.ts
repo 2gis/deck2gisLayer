@@ -30,5 +30,6 @@ export type CustomRenderProps = Partial<DeckProps> & {
     _2glRenderTarget: RenderTarget;
     _2glProgram: ShaderProgram;
     _2glVao: Vao;
+    _2gisFramestart: boolean;
     _customRender: (reason: string) => void;
 };

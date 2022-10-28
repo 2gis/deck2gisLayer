@@ -111,12 +111,19 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
         ) {
             return;
         }
-
-        this.deck.props.userData._2gisCurrentViewport = undefined;
+        const { userData } = this.deck.props;
+        userData._2gisCurrentViewport = undefined;
         const gl = this.gl;
         this.frameBuffer.bind(gl);
         gl.clearColor(1, 1, 1, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        if (userData._2gisFramestart) {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            userData._2gisFramestart = false;
+        } else {
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        }
+
         this.frameBuffer.unbind(gl);
         drawLayer(this.deck, this.map, this);
 
