@@ -69,6 +69,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
                     wrapT: Texture.ClampToEdgeWrapping,
                 });
                 const renderTarget = this.frameBuffer.bind(gl);
+                this.frameBuffer.unbind(gl);
                 this.deck = prepareDeckInstance({ map, gl, deck: this.props.deck, renderTarget });
             }
 

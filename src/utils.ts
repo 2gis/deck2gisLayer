@@ -139,9 +139,12 @@ function onMapMove(deck: Deck, map: Map): void {
 
 function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
     const mapSize = map.getSize();
+    const gl = map.getWebGLContext();
     const size = [mapSize[0] * window.devicePixelRatio, mapSize[1] * window.devicePixelRatio];
     renderTarget.setSize(size);
+    renderTarget.bind(gl);
     deck.props._framebuffer = (renderTarget as any)._frameBuffer;
+    renderTarget.unbind(gl);
 }
 
 function updateLayers(deck: Deck): void {
