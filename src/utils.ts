@@ -114,7 +114,6 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
         viewports: [currentViewport],
         layerFilter: ({ layer: deckLayer }) => layer.id === deckLayer.id,
         clearCanvas: false,
-        clearStack: true,
     });
 }
 
