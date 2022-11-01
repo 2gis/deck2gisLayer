@@ -4,14 +4,11 @@ import { Deck, RGBAColor } from '@deck.gl/core';
 import { data } from './data';
 import { initDeck2gisProps } from '../src/utils';
 
-declare global {
-    const mapgl: any;
-}
-declare var window: any;
+declare const mapgl: any;
 
 const map = new mapgl.Map('container', {
     center: [55.291748, 25.237678],
-    zoom: 17.1,
+    zoom: 14.1,
     pitch: 40,
     key: '4970330e-7f1c-4921-808c-0eb7c4e63001',
 });
@@ -26,6 +23,8 @@ function initDeckGL() {
     map.addLayer(deckLayer);
     const deckLayer2 = createHexagonLayer(data);
     map.addLayer(deckLayer2);
+    const deckLayer3 = createHexagonLayer2(data);
+    map.addLayer(deckLayer3);
 }
 
 const COLOR_RANGE: RGBAColor[] = [
@@ -62,16 +61,36 @@ function createHexagonLayer(data) {
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
-        opacity: 0.8,
-        radius: 480,
-        elevationScale: 2,
+        opacity: 0.2,
+        radius: 700,
+        elevationScale: 1,
+        getPosition: (d: any) => [d.point.lon, d.point.lat],
+        extruded: true,
+        antialiasing: true,
+    });
+
+    // todo need add call in map.addLayer(layer) for customLayer
+    layer.onAdd();
+    return layer;
+}
+
+function createHexagonLayer2(data) {
+    const layer = new Deck2gisLayer<HexagonLayer<any>>({
+        id: 'deckgl-HexagonLayer2',
+        deck,
+        colorRange: COLOR_RANGE,
+        type: HexagonLayer,
+        data,
+        parameters: { depthTest: true },
+        opacity: 0.2,
+        radius: 700,
+        elevationScale: 1,
         getPosition: (d: any) => [d.point.lon, d.point.lat],
         extruded: true,
     });
 
-    // todo need remove after next mpagl-api release
+    // todo need add call in map.addLayer(layer) for customLayer
     layer.onAdd();
-
     return layer;
 }
 
