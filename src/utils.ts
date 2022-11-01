@@ -87,7 +87,6 @@ export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
 }
 
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
-    console.log('remove', layer);
     deck.props.userData.customLayers.delete(layer);
     updateLayers(deck);
 }

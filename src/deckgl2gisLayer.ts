@@ -56,7 +56,9 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
             if ((map as any).__deck) {
                 this.deck = (map as any).__deck;
                 this.frameBuffer = (this.deck as any).props._2glRenderTarget;
-            } else if (!this.frameBuffer || !this.deck) {
+            }
+
+            if (!this.frameBuffer || !this.deck) {
                 const mapSize = map.getSize();
                 this.frameBuffer = new RenderTarget({
                     size: [

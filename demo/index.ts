@@ -48,7 +48,6 @@ function createHeatmapLayer(data) {
         getPosition: (d) => [d.point.lon, d.point.lat],
     });
 
-    // todo need remove after next mpagl-api release
     layer.onAdd();
 
     return layer;
@@ -61,15 +60,14 @@ function createHexagonLayer(data) {
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
-        opacity: 0.2,
-        radius: 700,
-        elevationScale: 1,
+        opacity: 0.8,
+        radius: 480,
+        elevationScale: 2,
         getPosition: (d: any) => [d.point.lon, d.point.lat],
         extruded: true,
         antialiasing: true,
     });
 
-    // todo need add call in map.addLayer(layer) for customLayer
     layer.onAdd();
     return layer;
 }
@@ -89,7 +87,6 @@ function createHexagonLayer2(data) {
         extruded: true,
     });
 
-    // todo need add call in map.addLayer(layer) for customLayer
     layer.onAdd();
     return layer;
 }
