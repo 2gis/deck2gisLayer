@@ -50,7 +50,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
 
     onAdd = () => {
         if (!this.map && this.props.deck) {
-            const map = this.props.deck.props.userData.map;
+            const map = this.props.deck.props.userData._2gisMap;
             this.map = map;
             const gl = (this.gl = map.getWebGLContext());
             if ((map as any).__deck) {
@@ -112,7 +112,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
             return;
         }
 
-        this.deck.props.userData.currentViewport = undefined;
+        this.deck.props.userData._2gisCurrentViewport = undefined;
         const gl = this.gl;
         this.frameBuffer.bind(gl);
         gl.clearColor(1, 1, 1, 0);

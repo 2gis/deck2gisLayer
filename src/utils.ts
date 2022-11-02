@@ -14,6 +14,7 @@ import Shader from '2gl/Shader';
 
 import fill_fsh from './optimized.fsh';
 import fill_vsh from './optimized.vsh';
+import { CustomRenderProps } from './types';
 
 export function prepareDeckInstance({
     map,
@@ -35,7 +36,7 @@ export function prepareDeckInstance({
     const program = createProgram();
     const vao = createVao(program);
 
-    const customRenderProp: any = {
+    const customRenderProps: CustomRenderProps = {
         useDevicePixels: true,
         _2glRenderTarget: renderTarget,
         _2glProgram: program,
@@ -50,7 +51,7 @@ export function prepareDeckInstance({
         },
     };
 
-    const deckProps = initDeck2gisProps(map, customRenderProp);
+    const deckProps = initDeck2gisProps(map, customRenderProps);
 
     let deckInstance: Deck;
 
@@ -82,12 +83,12 @@ export function prepareDeckInstance({
 }
 
 export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
-    deck.props.userData.customLayers.add(layer);
+    deck.props.userData._2gisCustomLayers.add(layer);
     updateLayers(deck);
 }
 
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
-    deck.props.userData.customLayers.delete(layer);
+    deck.props.userData._2gisCustomLayers.delete(layer);
     updateLayers(deck);
 }
 
@@ -96,12 +97,12 @@ export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
 }
 
 export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
-    let { currentViewport } = deck.props.userData;
+    let currentViewport = deck.props.userData._2gisCurrentViewport;
     if (!currentViewport) {
         // This is the first layer drawn in this render cycle.
         // Generate viewport from the current map state.
         currentViewport = getViewport(map);
-        deck.props.userData.currentViewport = currentViewport;
+        deck.props.userData._2gisCurrentViewport = currentViewport;
     }
 
     if (!(deck as any).layerManager) {
@@ -148,7 +149,7 @@ function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
 function updateLayers(deck: Deck): void {
     const layers: Layer<any>[] = [];
     let layerIndex = 0;
-    deck.props.userData.customLayers.forEach((deckLayer) => {
+    deck.props.userData._2gisCustomLayers.forEach((deckLayer) => {
         const LayerType = deckLayer.props.type;
         const layer = new LayerType(deckLayer.props, { _offset: layerIndex++ });
         layers.push(layer);
@@ -156,7 +157,7 @@ function updateLayers(deck: Deck): void {
     deck.setProps({ layers });
 }
 
-export function initDeck2gisProps(map: Map, deckProps?: DeckProps): DeckProps {
+export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {
         ...deckProps,
@@ -170,8 +171,8 @@ export function initDeck2gisProps(map: Map, deckProps?: DeckProps): DeckProps {
             blendEquation: gl.FUNC_ADD,
         },
         userData: {
-            customLayers: new Set(),
-            map,
+            _2gisCustomLayers: new Set(),
+            _2gisMap: map,
         },
         views: [new MapView({ id: '2gis' })],
     };
