@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "types": [],
+        "types": ["2gl"],
         "target": "es6",
         "module": "es6",
         "moduleResolution": "node",

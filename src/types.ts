@@ -1,3 +1,8 @@
+import type { DeckProps } from '@deck.gl/core/lib/deck';
+import type RenderTarget from '2gl/RenderTarget';
+import type Vao from '2gl/Vao';
+import type ShaderProgram from '2gl/ShaderProgram';
+
 export interface DeckCustomLayer {
     type: 'custom';
     id: string;
@@ -20,3 +25,10 @@ export interface MapViewState {
     pitch: number;
     fovy: number;
 }
+
+export type CustomRenderProps = Partial<DeckProps> & {
+    _2glRenderTarget: RenderTarget;
+    _2glProgram: ShaderProgram;
+    _2glVao: Vao;
+    _customRender: (reason: string) => void;
+};
