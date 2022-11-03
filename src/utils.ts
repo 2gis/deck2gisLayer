@@ -38,6 +38,7 @@ export function prepareDeckInstance({
 
     const customRenderProps: CustomRenderProps = {
         useDevicePixels: true,
+        _2gisFramestart: false,
         _2glRenderTarget: renderTarget,
         _2glProgram: program,
         _2glVao: vao,
@@ -76,7 +77,7 @@ export function prepareDeckInstance({
     } else {
         return null;
     }
-
+    (map as any)._impl.on('framestart', () => deck.props.userData._2gisFramestart = true)
     map.on('resize', () => onMapResize(map, deck, renderTarget));
     map.__deck = deckInstance;
     return deckInstance;
