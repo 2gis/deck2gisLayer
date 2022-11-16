@@ -34,7 +34,7 @@
         "no-string-literal": false,
         "no-var-requires": false,
         "no-irregular-whitespace": true,
-        "no-default-export": true,
+        "no-default-export": false,
         "variable-name": [false],
         "no-empty": false,
         "one-variable-per-declaration": false,

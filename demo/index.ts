@@ -1,6 +1,6 @@
 import { Deck2gisLayer } from '../src';
-import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
-import { Deck, RGBAColor } from '@deck.gl/core';
+import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers/typed';
+import { Color, Deck } from '@deck.gl/core/typed';
 import { data } from './data';
 import { initDeck2gisProps } from '../src/utils';
 
@@ -27,7 +27,7 @@ function initDeckGL() {
     map.addLayer(deckLayer3);
 }
 
-const COLOR_RANGE: RGBAColor[] = [
+const COLOR_RANGE: Color[] = [
     [1, 152, 189],
     [73, 227, 206],
     [216, 254, 181],
@@ -37,7 +37,7 @@ const COLOR_RANGE: RGBAColor[] = [
 ];
 
 function createHeatmapLayer(data) {
-    const layer = new Deck2gisLayer<HeatmapLayer<any>>({
+    const layer = new Deck2gisLayer<HeatmapLayer>({
         id: 'deckgl-HeatmapLayer',
         deck,
         colorRange: COLOR_RANGE,
@@ -48,12 +48,12 @@ function createHeatmapLayer(data) {
         getPosition: (d) => [d.point.lon, d.point.lat],
     });
 
-    layer.onAdd();
+    // layer.onAdd();
 
     return layer;
 }
 function createHexagonLayer(data) {
-    const layer = new Deck2gisLayer<HexagonLayer<any>>({
+    const layer = new Deck2gisLayer<HexagonLayer>({
         id: 'deckgl-HexagonLayer',
         deck,
         colorRange: COLOR_RANGE,
@@ -68,12 +68,12 @@ function createHexagonLayer(data) {
         antialiasing: true,
     });
 
-    layer.onAdd();
+    // layer.onAdd();
     return layer;
 }
 
 function createHexagonLayer2(data) {
-    const layer = new Deck2gisLayer<HexagonLayer<any>>({
+    const layer = new Deck2gisLayer<HexagonLayer>({
         id: 'deckgl-HexagonLayer2',
         deck,
         colorRange: COLOR_RANGE,
@@ -87,7 +87,7 @@ function createHexagonLayer2(data) {
         extruded: true,
     });
 
-    layer.onAdd();
+    //  layer.onAdd();
     return layer;
 }
 
