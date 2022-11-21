@@ -48,8 +48,6 @@ function createHeatmapLayer(data) {
         getPosition: (d) => [d.point.lon, d.point.lat],
     });
 
-    // layer.onAdd();
-
     return layer;
 }
 function createHexagonLayer(data) {
@@ -68,7 +66,6 @@ function createHexagonLayer(data) {
         antialiasing: true,
     });
 
-    // layer.onAdd();
     return layer;
 }
 
@@ -87,7 +84,6 @@ function createHexagonLayer2(data) {
         extruded: true,
     });
 
-    //  layer.onAdd();
     return layer;
 }
 

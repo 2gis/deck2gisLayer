@@ -44,7 +44,7 @@ export function prepareDeckInstance({
         _framebuffer: (renderTarget as any)._frameBuffer,
         _customRender: (reason: string) => {
             // todo  need change to public rerender method in mapgl map.triggerRedraw()
-            (map as any)._impl.state.needRerender = true;
+            map.triggerRerender();
             // customRender may be subscribed by DeckGL React component to update child props
             // make sure it is still called
             customRender?.(reason);
@@ -76,7 +76,11 @@ export function prepareDeckInstance({
     } else {
         return null;
     }
-    (map as any)._impl.on('framestart', () => ((deck.props as CustomRenderProps)._2gisData._2gisFramestart = true));
+    // todo use public methods after done TILES-4753
+    (map as any)._impl.on(
+        'framestart',
+        () => ((deck.props as CustomRenderProps)._2gisData._2gisFramestart = true),
+    );
     map.on('resize', () => onMapResize(map, deck, renderTarget));
     map.__deck = deckInstance;
     return deckInstance;

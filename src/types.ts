@@ -32,5 +32,5 @@ export type CustomRenderProps = Partial<DeckProps> & {
     _2glVao: Vao;
     _2gisFramestart: boolean;
     _customRender: (reason: string) => void;
-    _2gisData?: any
+    _2gisData?: any;
 };
