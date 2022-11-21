@@ -2,8 +2,8 @@
 // https://github.com/visgl/deck.gl/tree/master/modules/mapbox
 
 import { prepareDeckInstance, addLayer, removeLayer, updateLayer, drawLayer } from './utils';
-import type { Deck, Layer } from '@deck.gl/core';
-import { DeckCustomLayer } from './types';
+import type { Deck, Layer } from '@deck.gl/core/typed';
+import { CustomRenderProps, DeckCustomLayer } from './types';
 import type { Map } from '@2gis/mapgl/types';
 
 import RenderTarget from '2gl/RenderTarget';
@@ -11,7 +11,7 @@ import Texture from '2gl/Texture';
 import type Vao from '2gl/Vao';
 import type ShaderProgram from '2gl/ShaderProgram';
 
-export type LayerProps<LayerT extends Layer<any>> = Partial<LayerT['props']> & {
+export type LayerProps<LayerT extends Layer> = Partial<LayerT['props']> & {
     id: string;
     renderingMode?: '2d' | '3d';
     deck: Deck;
@@ -19,7 +19,7 @@ export type LayerProps<LayerT extends Layer<any>> = Partial<LayerT['props']> & {
     antialiasing?: boolean;
 };
 
-export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer {
+export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     id: string;
     type: 'custom';
     renderingMode: '2d' | '3d';
@@ -50,7 +50,7 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
 
     onAdd = () => {
         if (!this.map && this.props.deck) {
-            const map = this.props.deck.props.userData._2gisMap;
+            const map = (this.props.deck.props as CustomRenderProps)._2gisData._2gisMap;
             this.map = map;
             const gl = (this.gl = map.getWebGLContext());
             if ((map as any).__deck) {
@@ -111,15 +111,15 @@ export class Deck2gisLayer<LayerT extends Layer<any>> implements DeckCustomLayer
         ) {
             return;
         }
-        const { userData } = this.deck.props;
-        userData._2gisCurrentViewport = undefined;
+        const { _2gisData } = this.deck.props as CustomRenderProps;
+        _2gisData._2gisCurrentViewport = undefined;
         const gl = this.gl;
         this.frameBuffer.bind(gl);
         gl.clearColor(1, 1, 1, 0);
 
-        if (userData._2gisFramestart) {
+        if (_2gisData._2gisFramestart) {
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            userData._2gisFramestart = false;
+            _2gisData._2gisFramestart = false;
         } else {
             gl.clear(gl.COLOR_BUFFER_BIT);
         }

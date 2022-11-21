@@ -1,6 +1,6 @@
-import { WebMercatorViewport } from '@deck.gl/core';
+import { WebMercatorViewport } from '@deck.gl/core/typed';
 import type { Map } from '@2gis/mapgl/types';
-import { ViewStateProps } from '@deck.gl/core/lib/deck';
+import { WebMercatorViewportOptions } from '@deck.gl/core/typed/viewports/web-mercator-viewport';
 
 export class MapglMercatorViewport extends WebMercatorViewport {
     constructor(map: Map) {
@@ -28,8 +28,7 @@ export class MapglMercatorViewport extends WebMercatorViewport {
     }
 }
 
-export function getViewState(map: Map): ViewStateProps & {
-    repeat: boolean;
+export function getViewState(map: Map): WebMercatorViewportOptions & {
     padding: {
         left: number;
         right: number;
@@ -38,9 +37,7 @@ export function getViewState(map: Map): ViewStateProps & {
     };
 } {
     const [lng, lat] = map.getCenter();
-
-    const viewState: any & {
-        repeat: boolean;
+    const viewState: WebMercatorViewportOptions & {
         padding: {
             left: number;
             right: number;
