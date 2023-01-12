@@ -1,7 +1,7 @@
 // Use fork mapbox layer in deck.gl
 // https://github.com/visgl/deck.gl/tree/master/modules/mapbox
 
-import { prepareDeckInstance, addLayer, removeLayer, updateLayer, drawLayer } from './utils';
+import { prepareDeckInstance, addLayer, removeLayer, updateLayer, drawLayer, initDeck2gisProps } from './utils';
 import type { Deck, Layer } from '@deck.gl/core/typed';
 import { CustomRenderProps, DeckCustomLayer } from './types';
 import type { Map } from '@2gis/mapgl/types';
@@ -28,6 +28,8 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     props: LayerProps<LayerT>;
     gl?: WebGLRenderingContext | WebGL2RenderingContext;
     antialiasing: boolean;
+
+    static initDeck2gisProps = (map: Map, deckProps?: CustomRenderProps) => initDeck2gisProps(map, deckProps);
 
     private frameBuffer?: RenderTarget;
     private program?: ShaderProgram;
