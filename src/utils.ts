@@ -195,7 +195,7 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
 // Fix heatmap layer render: need reset gl state after each draw layers
 function stateBinder(map: Map, layer: Deck2gisLayer<any>) {
     const gl = map.getWebGLContext();
-    if (!layer.props.parameters.cullFaceEnabled) {
+    if (!layer.props?.parameters?.cullFaceEnabled) {
         gl.disable(gl.CULL_FACE);
     }
     gl.clearDepth(1);
