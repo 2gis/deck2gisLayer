@@ -2,6 +2,10 @@ import { WebMercatorViewport } from '@deck.gl/core/typed';
 import type { Map } from '@2gis/mapgl/types';
 import { WebMercatorViewportOptions } from '@deck.gl/core/typed/viewports/web-mercator-viewport';
 
+/**
+ * @hidden
+ * @internal
+ */
 export class MapglMercatorViewport extends WebMercatorViewport {
     constructor(map: Map) {
         const [width, height] = map.getSize();

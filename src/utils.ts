@@ -15,6 +15,10 @@ import fill_vsh from './optimized.vsh';
 import { CustomRenderProps } from './types';
 import { DeckProps } from '@deck.gl/core/typed';
 
+/**
+ * @hidden
+ * @internal
+ */
 export function prepareDeckInstance({
     map,
     gl,
@@ -86,20 +90,36 @@ export function prepareDeckInstance({
     return deckInstance;
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
     (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.add(layer);
     updateLayers(deck);
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
     (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.delete(layer);
     updateLayers(deck);
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
     updateLayers(deck);
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
     let currentViewport = (deck.props as CustomRenderProps)._2gisData._2gisCurrentViewport;
     if (!currentViewport) {
@@ -122,6 +142,10 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
     });
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 function getViewport(map: Map): MapglMercatorViewport | undefined {
     if (!map) {
         return undefined;
@@ -130,6 +154,10 @@ function getViewport(map: Map): MapglMercatorViewport | undefined {
     return new MapglMercatorViewport(map);
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 function onMapMove(deck: Deck, map: Map): void {
     deck.setProps({
         viewState: getViewState(map),
@@ -140,6 +168,10 @@ function onMapMove(deck: Deck, map: Map): void {
     deck.needsRedraw({ clearRedrawFlags: true });
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
     const mapSize = map.getSize();
     const gl = map.getWebGLContext();
@@ -150,6 +182,10 @@ function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
     renderTarget.unbind(gl);
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 function updateLayers(deck: Deck): void {
     const layers: Layer<any>[] = [];
     let layerIndex = 0;
@@ -193,6 +229,10 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
 }
 
 // Fix heatmap layer render: need reset gl state after each draw layers
+/**
+ * @hidden
+ * @internal
+ */
 function stateBinder(map: Map, layer: Deck2gisLayer<any>) {
     const gl = map.getWebGLContext();
     if (!layer.props?.parameters?.cullFaceEnabled) {
@@ -202,6 +242,10 @@ function stateBinder(map: Map, layer: Deck2gisLayer<any>) {
     gl.clear(gl.DEPTH_BUFFER_BIT);
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function createVao(program: ShaderProgram) {
     const screenVertices = [-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1];
     return new Vao(program, {
@@ -215,6 +259,10 @@ export function createVao(program: ShaderProgram) {
     });
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function createProgram() {
     return new ShaderProgram({
         vertex: new Shader('vertex', fill_vsh),
