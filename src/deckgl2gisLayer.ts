@@ -58,7 +58,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         this.antialiasing = Boolean(props.antialiasing);
     }
 
-    onAdd = () => {
+    public onAdd = () => {
         if (!this.map && this.props.deck) {
             const map = (this.props.deck.props as CustomRenderProps)._2gisData._2gisMap;
             this.map = map;
@@ -94,13 +94,13 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         }
     };
 
-    onRemove = () => {
+    public onRemove = () => {
         if (this.deck) {
             removeLayer(this.deck, this);
         }
     };
 
-    setProps(props: Partial<LayerProps<LayerT>>) {
+    public setProps(props: Partial<LayerProps<LayerT>>) {
         // id cannot be changed
         Object.assign(this.props, props, { id: this.id });
         this.antialiasing = Boolean(props.antialiasing);
@@ -110,7 +110,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         }
     }
 
-    render = () => {
+    public render = () => {
         if (
             !this.deck ||
             !this.map ||

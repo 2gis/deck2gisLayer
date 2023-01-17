@@ -10,6 +10,10 @@ export interface DeckCustomLayer {
     props: any;
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export interface MapViewState {
     repeat: boolean;
     padding: {
