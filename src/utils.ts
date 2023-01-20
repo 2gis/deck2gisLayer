@@ -197,6 +197,11 @@ function updateLayers(deck: Deck): void {
     deck.setProps({ layers });
 }
 
+/**
+ * The helper function is a make in Deck.gl props to MapGL map link with him.
+ * @param map The map instance.
+ * @param deckProps CustomRenderProps initialization options.
+ */
 export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {

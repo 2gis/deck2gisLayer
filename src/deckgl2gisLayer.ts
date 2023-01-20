@@ -18,7 +18,7 @@ import Texture from '2gl/Texture';
 import type Vao from '2gl/Vao';
 import type ShaderProgram from '2gl/ShaderProgram';
 
-export type LayerProps<LayerT extends Layer> = Partial<LayerT['props']> & {
+export type DeckInternalLayerProps = {
     id: string;
     renderingMode?: '2d' | '3d';
     deck: Deck;
@@ -26,6 +26,11 @@ export type LayerProps<LayerT extends Layer> = Partial<LayerT['props']> & {
     antialiasing?: boolean;
 };
 
+export type LayerProps<LayerT extends Layer> = Partial<LayerT['props']> & DeckInternalLayerProps;
+
+/**
+ * A class that provides render any deck.gl layer inside the MapGl canvas / WebGL context.
+ */
 export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     id: string;
     type: 'custom';
@@ -44,6 +49,22 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     private vao?: Vao;
 
     /* eslint-disable no-this-before-super */
+    /**
+     * Example:
+     * ```js
+     * const deckLayer = new mapgl.Deck2gisLayer(map, {
+     *     id: 'deckLayer',
+     *     deck,
+     *     type: HexagonLayer,
+     *     data,
+     *     getPosition: (d) => [d.point.lon, d.point.lat]
+     * });
+     *
+     * map.addLayer(deckLayer);
+     * ```
+     * @param map The map instance.
+     * @param options Deck2gisLayer initialization options.
+     */
     constructor(props: LayerProps<LayerT>) {
         if (!props.id) {
             throw new Error('Layer must have a unique id');
@@ -58,6 +79,11 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         this.antialiasing = Boolean(props.antialiasing);
     }
 
+    /**
+     * @hidden
+     * @internal
+     * MapGL call this method after add layer to map.
+     */
     public onAdd = () => {
         if (!this.map && this.props.deck) {
             const map = (this.props.deck.props as CustomRenderProps)._2gisData._2gisMap;
@@ -94,12 +120,20 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         }
     };
 
+    /**
+     * @hidden
+     * @internal
+     * MapGL call this method after remove layer from map.
+     */
     public onRemove = () => {
         if (this.deck) {
             removeLayer(this.deck, this);
         }
     };
 
+    /**
+     * Update a layer after it's added.
+     */
     public setProps(props: Partial<LayerProps<LayerT>>) {
         // id cannot be changed
         Object.assign(this.props, props, { id: this.id });
@@ -110,6 +144,11 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         }
     }
 
+    /**
+     * @hidden
+     * @internal
+     * MapGL call this method each render map frame.
+     */
     public render = () => {
         if (
             !this.deck ||
