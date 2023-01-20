@@ -32,6 +32,10 @@ export class MapglMercatorViewport extends WebMercatorViewport {
     }
 }
 
+/**
+ * @hidden
+ * @internal
+ */
 export function getViewState(map: Map): WebMercatorViewportOptions & {
     padding: {
         left: number;

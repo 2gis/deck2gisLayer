@@ -30,7 +30,11 @@ export interface MapViewState {
     fovy: number;
 }
 
-export type CustomRenderProps = Partial<DeckProps> & {
+/**
+ * @hidden
+ * @internal
+ */
+export type CustomRenderInternalProps = {
     _2glRenderTarget: RenderTarget;
     _2glProgram: ShaderProgram;
     _2glVao: Vao;
@@ -38,3 +42,5 @@ export type CustomRenderProps = Partial<DeckProps> & {
     _customRender: (reason: string) => void;
     _2gisData?: any;
 };
+
+export type CustomRenderProps = Partial<DeckProps> & CustomRenderInternalProps;
