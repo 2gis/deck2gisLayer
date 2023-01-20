@@ -29,7 +29,7 @@ export type DeckInternalLayerProps = {
 export type LayerProps<LayerT extends Layer> = Partial<LayerT['props']> & DeckInternalLayerProps;
 
 /**
- * A class that provides render any deck.gl layer inside the MapGl canvas / WebGL context.
+ * A class that provides rendering any deck.gl layer inside the MapGl canvas / WebGL context.
  */
 export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     id: string;
@@ -82,7 +82,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     /**
      * @hidden
      * @internal
-     * MapGL call this method after add layer to map.
+     * MapGL calls this method after adding a layer to a map.
      */
     public onAdd = () => {
         if (!this.map && this.props.deck) {
@@ -123,7 +123,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     /**
      * @hidden
      * @internal
-     * MapGL call this method after remove layer from map.
+     * MapGL calls this method after removing a layer from a map.
      */
     public onRemove = () => {
         if (this.deck) {
@@ -147,7 +147,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     /**
      * @hidden
      * @internal
-     * MapGL call this method each render map frame.
+     * MapGL calls this method on each map frame rendering.
      */
     public render = () => {
         if (
