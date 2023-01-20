@@ -198,7 +198,7 @@ function updateLayers(deck: Deck): void {
 }
 
 /**
- * The helper function is a make in Deck.gl props to MapGL map link with him.
+ *  Initializes deck.gl properties for working with the MapGL map.
  * @param map The map instance.
  * @param deckProps CustomRenderProps initialization options.
  */

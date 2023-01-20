@@ -132,7 +132,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     };
 
     /**
-     * Update a layer after it's added.
+     * Sets layer properties and updates the layer.
      */
     public setProps(props: Partial<LayerProps<LayerT>>) {
         // id cannot be changed
