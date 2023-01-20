@@ -198,7 +198,7 @@ function updateLayers(deck: Deck): void {
 }
 
 /**
- *  Initializes deck.gl properties for working with the MapGL map.
+ * Initializes deck.gl properties for working with the MapGL map.
  * @param map The map instance.
  * @param deckProps CustomRenderProps initialization options.
  */
