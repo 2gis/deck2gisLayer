@@ -43,4 +43,8 @@ export type CustomRenderInternalProps = {
     _2gisData?: any;
 };
 
+/**
+ * CustomRenderProps is type extends from DeckProps:
+ * https://deck.gl/docs/api-reference/core/deck#properties
+ */
 export type CustomRenderProps = Partial<DeckProps> & CustomRenderInternalProps;
