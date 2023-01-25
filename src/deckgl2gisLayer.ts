@@ -19,18 +19,18 @@ import type Vao from '2gl/Vao';
 import type ShaderProgram from '2gl/ShaderProgram';
 
 /**
- * A class that extends deck.gl's base Layer class.
+ * The any Layer class from deck.gl.
  */
-export type DeckBaseLayer = any;
+export type DeckLayer = any;
 
 /**
- * Deck2gisLayer layer props
+ * Deck2gisLayer required layer props.
  */
-export interface DeckInternalLayerProps {
+export interface Deck2gisLayerProps {
     id: string;
     renderingMode?: '2d' | '3d';
     deck: Deck;
-    type: DeckBaseLayer;
+    type: DeckLayer;
     antialiasing?: boolean;
 }
 
@@ -38,7 +38,7 @@ export interface DeckInternalLayerProps {
  * LayerProps is type extends from Layer:
  * https://deck.gl/docs/api-reference/core/layer
  */
-export type LayerProps<LayerT extends Layer> = DeckInternalLayerProps & Partial<LayerT['props']>;
+export type LayerProps<LayerT extends Layer> = Deck2gisLayerProps & Partial<LayerT['props']>;
 
 /**
  * A class that provides rendering any deck.gl layer inside the MapGl canvas / WebGL context.
@@ -53,6 +53,11 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     gl?: WebGLRenderingContext | WebGL2RenderingContext;
     antialiasing: boolean;
 
+    /**
+     * Initializes deck.gl properties for working with the MapGL map.
+     * @param map The map instance.
+     * @param deckProps CustomRenderProps initialization options.
+     */
     static initDeck2gisProps = (map: Map, deckProps?: CustomRenderProps) =>
         initDeck2gisProps(map, deckProps);
 
