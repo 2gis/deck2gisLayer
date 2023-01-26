@@ -19,12 +19,12 @@ import type Vao from '2gl/Vao';
 import type ShaderProgram from '2gl/ShaderProgram';
 
 /**
- * The any Layer class from deck.gl.
+ * Any Layer class from deck.gl.
  */
 export type DeckLayer = any;
 
 /**
- * Deck2gisLayer required layer props.
+ * Deck2gisLayer required props.
  */
 export interface Deck2gisLayerProps {
     id: string;
