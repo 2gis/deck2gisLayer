@@ -178,8 +178,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         ) {
             return;
         }
-        const { _2gisData } = this.deck.props as CustomRenderProps;
-        _2gisData._2gisCurrentViewport = undefined;
+        const { _2gisData, skipResizeRenderer } = this.deck.props as CustomRenderProps;
         const gl = this.gl;
         this.frameBuffer.bind(gl);
         gl.clearColor(1, 1, 1, 0);
@@ -192,28 +191,34 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         }
 
         this.frameBuffer.unbind(gl);
-        drawLayer(this.deck, this.map, this);
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         const mapSize = this.map.getSize();
-        const texture = this.frameBuffer.getTexture();
-        texture.enable(gl, 0);
-        this.program.enable(gl);
-        this.program.bind(gl, {
-            iResolution: [
-                mapSize[0] * window.devicePixelRatio,
-                mapSize[1] * window.devicePixelRatio,
-            ],
-            iChannel0: 0,
-            enabled: Number(this.antialiasing),
-        });
+        if (
+            !skipResizeRenderer ||
+            (this.deck.width === mapSize[0] && this.deck.height === mapSize[1])
+        ) {
+            drawLayer(this.deck, this.map, this);
 
-        this.vao.bind({
-            gl,
-            extensions: { OES_vertex_array_object: gl.getExtension('OES_vertex_array_object') },
-        });
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            const texture = this.frameBuffer.getTexture();
 
-        gl.disable(gl.CULL_FACE);
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+            texture.enable(gl, 0);
+            this.program.enable(gl);
+            this.program.bind(gl, {
+                iResolution: [
+                    mapSize[0] * window.devicePixelRatio,
+                    mapSize[1] * window.devicePixelRatio,
+                ],
+                iChannel0: 0,
+                enabled: Number(this.antialiasing),
+            });
+
+            this.vao.bind({
+                gl,
+                extensions: { OES_vertex_array_object: gl.getExtension('OES_vertex_array_object') },
+            });
+
+            gl.disable(gl.CULL_FACE);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
     };
 }
