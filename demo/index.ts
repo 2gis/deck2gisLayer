@@ -13,7 +13,7 @@ const map = new mapgl.Map('container', {
     key: '4970330e-7f1c-4921-808c-0eb7c4e63001',
 });
 
-const deck = new Deck(initDeck2gisProps(map));
+const deck = new Deck(initDeck2gisProps(map, { skipResizeRenderer: true }));
 map.once('ready', () => {
     initDeckGL();
 });

@@ -12,7 +12,7 @@ import Shader from '2gl/Shader';
 
 import fill_fsh from './optimized.fsh';
 import fill_vsh from './optimized.vsh';
-import { CustomRenderProps } from './types';
+import { CustomRenderProps, RenderProps } from './types';
 import { DeckProps } from '@deck.gl/core/typed';
 
 /**
@@ -82,6 +82,10 @@ export function prepareDeckInstance({
     }
     // todo use public methods after done TILES-4753
     (map as any)._impl.on(
+        'frameend',
+        () => ((deckInstance as any).props._2gisData._2gisCurrentViewport = null),
+    );
+    (map as any)._impl.on(
         'framestart',
         () => ((deck.props as CustomRenderProps)._2gisData._2gisFramestart = true),
     );
@@ -121,18 +125,18 @@ export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
  * @internal
  */
 export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
+    if (!(deck as any).layerManager) {
+        return;
+    }
+
     let currentViewport = (deck.props as CustomRenderProps)._2gisData._2gisCurrentViewport;
+
     if (!currentViewport) {
         // This is the first layer drawn in this render cycle.
         // Generate viewport from the current map state.
         currentViewport = getViewport(map);
         (deck.props as CustomRenderProps)._2gisData._2gisCurrentViewport = currentViewport;
     }
-
-    if (!(deck as any).layerManager) {
-        return;
-    }
-
     stateBinder(map, layer);
 
     deck._drawLayers('2gis-repaint', {
@@ -202,7 +206,7 @@ function updateLayers(deck: Deck): void {
  * @param map The map instance.
  * @param deckProps CustomRenderProps initialization options.
  */
-export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
+export function initDeck2gisProps(map: Map, deckProps?: RenderProps | CustomRenderProps): DeckProps {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {
         ...deckProps,
