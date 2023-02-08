@@ -8,6 +8,7 @@ import {
     updateLayer,
     drawLayer,
     initDeck2gisProps,
+    onMapResize,
 } from './utils';
 import type { Deck, Layer } from '@deck.gl/core/typed';
 import { CustomRenderProps, DeckCustomLayer } from './types';
@@ -178,14 +179,21 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         ) {
             return;
         }
+        const mapSize = this.map.getSize();
+        if (this.deck.width !== mapSize[0] || this.deck.height !== mapSize[1]) {
+            (this.deck as any).animationLoop._resizeCanvasDrawingBuffer();
+            (this.deck as any).animationLoop._resizeViewport();
+            const renderTarget = this.frameBuffer.bind(this.gl);
+            onMapResize(this.map, this.deck, renderTarget);
+        }
         const { _2gisData } = this.deck.props as CustomRenderProps;
-        _2gisData._2gisCurrentViewport = undefined;
         const gl = this.gl;
         this.frameBuffer.bind(gl);
         gl.clearColor(1, 1, 1, 0);
 
         if (_2gisData._2gisFramestart) {
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            _2gisData._2gisCurrentViewport = undefined;
             _2gisData._2gisFramestart = false;
         } else {
             gl.clear(gl.COLOR_BUFFER_BIT);
@@ -195,7 +203,6 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         drawLayer(this.deck, this.map, this);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        const mapSize = this.map.getSize();
         const texture = this.frameBuffer.getTexture();
         texture.enable(gl, 0);
         this.program.enable(gl);
