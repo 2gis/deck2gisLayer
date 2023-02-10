@@ -172,7 +172,7 @@ function onMapMove(deck: Deck, map: Map): void {
  * @hidden
  * @internal
  */
-function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
+export function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
     const mapSize = map.getSize();
     const gl = map.getWebGLContext();
     const size = [mapSize[0] * window.devicePixelRatio, mapSize[1] * window.devicePixelRatio];
