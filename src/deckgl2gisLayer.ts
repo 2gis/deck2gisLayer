@@ -128,9 +128,10 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
                 this.frameBuffer.unbind(gl);
                 this.deck = prepareDeckInstance({ map, gl, deck: this.props.deck, renderTarget });
             }
-
-            this.program = (this.deck as any).props._2glProgram;
-            this.vao = (this.deck as any).props._2glVao;
+            if (this.deck) {
+                this.program = (this.deck as any).props._2glProgram;
+                this.vao = (this.deck as any).props._2glVao;
+            }
         }
 
         if (this.deck) {
@@ -171,6 +172,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     public render = () => {
         if (
             !this.deck ||
+            !(this.deck as any).layerManager ||
             !this.map ||
             !this.frameBuffer ||
             !this.program ||
