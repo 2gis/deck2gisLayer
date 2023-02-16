@@ -50,9 +50,10 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     renderingMode: '2d' | '3d';
     map: Map | null;
     deck: Deck | null;
-    props: LayerProps<LayerT>;
+    props: LayerProps<LayerT> | undefined;
     gl?: WebGLRenderingContext | WebGL2RenderingContext;
     antialiasing: boolean;
+    isDestroyed: boolean;
 
     /**
      * Initializes deck.gl properties for working with the MapGL map.
@@ -87,7 +88,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         if (!props.id) {
             throw new Error('Layer must have a unique id');
         }
-
+        this.isDestroyed = false;
         this.id = props.id;
         this.type = 'custom';
         this.renderingMode = props.renderingMode || '3d';
@@ -103,7 +104,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * MapGL calls this method after adding a layer to a map.
      */
     public onAdd = () => {
-        if (!this.map && this.props.deck) {
+        if (!this.map && this.props && this.props.deck && !this.isDestroyed) {
             const map = (this.props.deck.props as CustomRenderProps)._2gisData._2gisMap;
             this.map = map;
             const gl = (this.gl = map.getWebGLContext());
@@ -134,7 +135,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             }
         }
 
-        if (this.deck) {
+        if (this.deck && !this.isDestroyed) {
             addLayer(this.deck, this);
         }
     };
@@ -155,14 +156,30 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * @param props deck.gl layer properties.
      */
     public setProps(props: Partial<LayerProps<LayerT>>) {
-        // id cannot be changed
-        Object.assign(this.props, props, { id: this.id });
-        this.antialiasing = Boolean(props.antialiasing);
-        // safe guard in case setProps is called before onAdd
-        if (this.deck) {
-            updateLayer(this.deck, this);
+        if (!this.isDestroyed && this.props) {
+            // id cannot be changed
+            Object.assign(this.props, props, { id: this.id });
+            this.antialiasing = Boolean(props.antialiasing);
+            // safe guard in case setProps is called before onAdd
+            if (this.deck) {
+                updateLayer(this.deck, this);
+            }
         }
     }
+
+    /**
+     * Destroys the layer and frees all related resources.
+     */
+    public destroy = () => {
+        this.deck = null;
+        this.map = null;
+        this.frameBuffer = undefined;
+        this.program = undefined;
+        this.vao = undefined;
+        this.gl = undefined;
+        this.isDestroyed = true;
+        this.props = undefined;
+    };
 
     /**
      * @hidden
@@ -171,13 +188,15 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      */
     public render = () => {
         if (
+            this.isDestroyed ||
             !this.deck ||
             !(this.deck as any).layerManager ||
             !this.map ||
             !this.frameBuffer ||
             !this.program ||
             !this.vao ||
-            !this.gl
+            !this.gl ||
+            !this.props
         ) {
             return;
         }
