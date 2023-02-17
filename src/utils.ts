@@ -162,7 +162,7 @@ function getViewport(map: Map): MapglMercatorViewport | undefined {
  * @internal
  */
 function onMapMove(deck: Deck, map: Map): void {
-    if (deck && (deck as any).layerManager) {
+    if (deck['layerManager']) {
         deck.setProps({
             viewState: getViewState(map),
         });
