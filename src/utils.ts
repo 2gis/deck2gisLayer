@@ -192,7 +192,7 @@ export function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
  * @internal
  */
 function updateLayers(deck: Deck): void {
-    if ((deck as any).layerManager) {
+    if (deck['layerManager']) {
         const layers: Layer<any>[] = [];
         let layerIndex = 0;
         (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.forEach((deckLayer) => {
