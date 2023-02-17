@@ -104,7 +104,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * MapGL calls this method after adding a layer to a map.
      */
     public onAdd = () => {
-        if (!this.map && this.props && this.props.deck && !this.isDestroyed) {
+        if (!this.map && this.props?.deck && !this.isDestroyed) {
             const map = (this.props.deck.props as CustomRenderProps)._2gisData._2gisMap;
             this.map = map;
             const gl = (this.gl = map.getWebGLContext());
