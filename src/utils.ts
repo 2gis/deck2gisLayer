@@ -74,7 +74,7 @@ export function prepareDeckInstance({
         map.on('move', () => onMapMove(deckInstance, map));
     }
 
-    if (deck) {
+    if (deck?.['layerManager']) {
         deckInstance = deck as Deck;
         deckInstance.setProps(deckProps);
     } else {
@@ -106,6 +106,9 @@ export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
     (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.delete(layer);
     updateLayers(deck);
+    if ((deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.size === 0) {
+        (deck.props as CustomRenderProps)._2gisData._2gisMap.__deck = undefined;
+    }
 }
 
 /**
@@ -159,13 +162,15 @@ function getViewport(map: Map): MapglMercatorViewport | undefined {
  * @internal
  */
 function onMapMove(deck: Deck, map: Map): void {
-    deck.setProps({
-        viewState: getViewState(map),
-    });
-    // Camera changed, will trigger a map repaint right after this
-    // Clear any change flag triggered by setting viewState so that deck does not request
-    // a second repaint
-    deck.needsRedraw({ clearRedrawFlags: true });
+    if (deck['layerManager']) {
+        deck.setProps({
+            viewState: getViewState(map),
+        });
+        // Camera changed, will trigger a map repaint right after this
+        // Clear any change flag triggered by setting viewState so that deck does not request
+        // a second repaint
+        deck.needsRedraw({ clearRedrawFlags: true });
+    }
 }
 
 /**
@@ -187,14 +192,16 @@ export function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget) {
  * @internal
  */
 function updateLayers(deck: Deck): void {
-    const layers: Layer<any>[] = [];
-    let layerIndex = 0;
-    (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.forEach((deckLayer) => {
-        const LayerType = deckLayer.props.type;
-        const layer = new LayerType(deckLayer.props, { _offset: layerIndex++ });
-        layers.push(layer);
-    });
-    deck.setProps({ layers });
+    if (deck['layerManager']) {
+        const layers: Layer<any>[] = [];
+        let layerIndex = 0;
+        (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.forEach((deckLayer) => {
+            const LayerType = deckLayer.props.type;
+            const layer = new LayerType(deckLayer.props, { _offset: layerIndex++ });
+            layers.push(layer);
+        });
+        deck.setProps({ layers });
+    }
 }
 
 /**
