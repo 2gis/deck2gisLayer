@@ -74,7 +74,7 @@ export function prepareDeckInstance({
         map.on('move', () => onMapMove(deckInstance, map));
     }
 
-    if (deck && (deck as any).layerManager) {
+    if (deck?.['layerManager']) {
         deckInstance = deck as Deck;
         deckInstance.setProps(deckProps);
     } else {
