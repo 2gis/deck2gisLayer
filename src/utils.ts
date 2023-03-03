@@ -106,9 +106,6 @@ export function addLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
 export function removeLayer(deck: Deck, layer: Deck2gisLayer<any>): void {
     (deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.delete(layer);
     updateLayers(deck);
-    if ((deck.props as CustomRenderProps)._2gisData._2gisCustomLayers.size === 0) {
-        (deck.props as CustomRenderProps)._2gisData._2gisMap.__deck = undefined;
-    }
 }
 
 /**
