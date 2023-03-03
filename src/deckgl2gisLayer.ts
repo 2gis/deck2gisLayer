@@ -149,6 +149,8 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         if (this.deck) {
             removeLayer(this.deck, this);
         }
+        this.deck = null;
+        this.map = null;
     };
 
     /**
