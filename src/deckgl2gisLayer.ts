@@ -203,22 +203,24 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             return;
         }
         const mapSize = this.map.getSize();
-        if (this.deck.width !== mapSize[0] || this.deck.height !== mapSize[1]) {
-            (this.deck as any).animationLoop._resizeCanvasDrawingBuffer();
-            (this.deck as any).animationLoop._resizeViewport();
-            const renderTarget = this.frameBuffer.bind(this.gl);
-            onMapResize(this.map, this.deck, renderTarget);
-        }
         const { _2gisData } = this.deck.props as CustomRenderProps;
         const gl = this.gl;
-        this.frameBuffer.bind(gl);
-        gl.clearColor(1, 1, 1, 0);
 
         if (_2gisData._2gisFramestart) {
+            if (this.deck.width !== mapSize[0] || this.deck.height !== mapSize[1]) {
+                (this.deck as any).animationLoop._resizeCanvasDrawingBuffer();
+                (this.deck as any).animationLoop._resizeViewport();
+                const renderTarget = this.frameBuffer.bind(this.gl);
+                onMapResize(this.map, this.deck, renderTarget);
+            }
+            this.frameBuffer.bind(gl);
+            gl.clearColor(1, 1, 1, 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             _2gisData._2gisCurrentViewport = undefined;
             _2gisData._2gisFramestart = false;
         } else {
+            this.frameBuffer.bind(gl);
+            gl.clearColor(1, 1, 1, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
