@@ -12,6 +12,7 @@
     "build:js-demo": "webpack --demo",
     "build:typings": "tsc -p tsconfig.module.json --declaration --emitDeclarationOnly",
     "build:docs": "node build/documentalist",
+    "test:typings": "tsc -p tsconfig.typings.validation.json",
     "dev": "npm run build:assets && webpack-dev-server",
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css,md}\"",
     "prettier:write": "prettier --write \"./**/*.{ts,tsx,js,json,html,css,md}\"",
