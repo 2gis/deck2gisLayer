@@ -1,0 +1,21 @@
+
+name: Test deck2gisLayer
+
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+
+jobs:
+  typings-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - run: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci
+      - run: npm run build
+      - run: npm run test:typings
