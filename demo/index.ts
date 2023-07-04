@@ -11,6 +11,7 @@ const map = new mapgl.Map('container', {
     zoom: 14.1,
     pitch: 40,
     key: '4970330e-7f1c-4921-808c-0eb7c4e63001',
+    webglVersion: 2,
 });
 
 const deck = new Deck(initDeck2gisProps(map));

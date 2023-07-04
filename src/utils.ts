@@ -10,8 +10,10 @@ import ShaderProgram from '2gl/ShaderProgram';
 import RenderTarget from '2gl/RenderTarget';
 import Shader from '2gl/Shader';
 
-import fill_fsh from './optimized.fsh';
-import fill_vsh from './optimized.vsh';
+//import fill_fsh from './fillTextureFXAA.fsh';
+//import fill_vsh from './fillTextureFXAA.vsh';
+import fill_fsh from './fillTexture.fsh';
+import fill_vsh from './fillTexture.vsh';
 import { CustomRenderProps } from './types';
 import { DeckProps } from '@deck.gl/core/typed';
 
@@ -24,11 +26,13 @@ export function prepareDeckInstance({
     gl,
     deck,
     renderTarget,
+    aliasingTarget,
 }: {
     map: Map & { __deck?: Deck | null };
     gl: WebGLRenderingContext;
     deck?: Deck;
-    renderTarget: RenderTarget;
+    renderTarget: any;
+    aliasingTarget: any;
 }): Deck | null {
     // Only create one deck instance per context
     if (map.__deck) {
@@ -43,9 +47,10 @@ export function prepareDeckInstance({
         useDevicePixels: true,
         _2gisFramestart: false,
         _2glRenderTarget: renderTarget,
+        _2glAliasingTarget: aliasingTarget,
         _2glProgram: program,
         _2glVao: vao,
-        _framebuffer: (renderTarget as any)._frameBuffer,
+        _framebuffer: renderTarget as any,
         _customRender: (reason: string) => {
             // todo  need change to public rerender method in mapgl map.triggerRedraw()
             map.triggerRerender();
@@ -258,7 +263,7 @@ function stateBinder(map: Map, layer: Deck2gisLayer<any>) {
 export function createVao(program: ShaderProgram) {
     const screenVertices = [-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1];
     return new Vao(program, {
-        position: new Buffer(new Int8Array(screenVertices), {
+        a_vec2_position: new Buffer(new Int8Array(screenVertices), {
             itemSize: 2,
             dataType: Buffer.Byte,
             stride: 0,
@@ -278,9 +283,9 @@ export function createProgram() {
         fragment: new Shader('fragment', fill_fsh),
         uniforms: [
             { name: 'iResolution', type: '2f' },
-            { name: 'iChannel0', type: '1i' },
+            { name: 'u_sr2d_texture', type: '1i' },
             { name: 'enabled', type: '1i' },
         ],
-        attributes: [{ name: 'position', location: 0 }],
+        attributes: [{ name: 'a_vec2_position', location: 0 }],
     });
 }

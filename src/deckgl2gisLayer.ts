@@ -63,7 +63,8 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     static initDeck2gisProps = (map: Map, deckProps?: CustomRenderProps) =>
         initDeck2gisProps(map, deckProps);
 
-    private frameBuffer?: RenderTarget;
+    private frameBuffer?: any;
+    private colorBuffer?: RenderTarget;
     private program?: ShaderProgram;
     private vao?: Vao;
 
@@ -111,11 +112,12 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             if ((map as any).__deck) {
                 this.deck = (map as any).__deck;
                 this.frameBuffer = (this.deck as any).props._2glRenderTarget;
+                this.colorBuffer = (this.deck as any).props._2glAliasingTarget;
             }
 
             if (!this.frameBuffer || !this.deck) {
                 const mapSize = map.getSize();
-                this.frameBuffer = new RenderTarget({
+                this.colorBuffer = new RenderTarget({
                     size: [
                         Math.ceil(mapSize[0] * window.devicePixelRatio),
                         Math.ceil(mapSize[1] * window.devicePixelRatio),
@@ -124,10 +126,65 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
                     minFilter: Texture.LinearFilter,
                     wrapS: Texture.ClampToEdgeWrapping,
                     wrapT: Texture.ClampToEdgeWrapping,
+                }).bind(gl);
+
+                const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
+                const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
+
+                const FRAMEBUFFER = {
+                    RENDERBUFFER: 0,
+                    COLORBUFFER: 1,
+                };
+                const fb = [gl.createFramebuffer(), (this.colorBuffer as any)._frameBuffer];
+
+                const depthRenderBuffer = gl.createRenderbuffer();
+                gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
+                gl.renderbufferStorageMultisample(
+                    gl.RENDERBUFFER,
+                    4,
+                    gl.DEPTH_COMPONENT16,
+                    targetTextureWidth,
+                    targetTextureHeight,
+                );
+
+                const colorRenderBuffer = gl.createRenderbuffer();
+                gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
+
+                gl.renderbufferStorageMultisample(
+                    gl.RENDERBUFFER,
+                    4,
+                    gl.RGBA8,
+                    targetTextureWidth,
+                    targetTextureHeight,
+                );
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, fb[FRAMEBUFFER.RENDERBUFFER]);
+
+                gl.framebufferRenderbuffer(
+                    gl.FRAMEBUFFER,
+                    gl.COLOR_ATTACHMENT0,
+                    gl.RENDERBUFFER,
+                    colorRenderBuffer,
+                );
+
+                gl.framebufferRenderbuffer(
+                    gl.FRAMEBUFFER,
+                    gl.DEPTH_ATTACHMENT,
+                    gl.RENDERBUFFER,
+                    depthRenderBuffer,
+                );
+
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+                this.frameBuffer = fb[FRAMEBUFFER.RENDERBUFFER];
+
+                this.deck = prepareDeckInstance({
+                    map,
+                    gl,
+                    deck: this.props.deck,
+                    renderTarget: this.frameBuffer,
+                    aliasingTarget: this.colorBuffer,
                 });
-                const renderTarget = this.frameBuffer.bind(gl);
-                this.frameBuffer.unbind(gl);
-                this.deck = prepareDeckInstance({ map, gl, deck: this.props.deck, renderTarget });
             }
             if (this.deck) {
                 this.program = (this.deck as any).props._2glProgram;
@@ -195,6 +252,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             !(this.deck as any).layerManager ||
             !this.map ||
             !this.frameBuffer ||
+            !this.colorBuffer ||
             !this.program ||
             !this.vao ||
             !this.gl ||
@@ -213,22 +271,51 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
                 const renderTarget = this.frameBuffer.bind(this.gl);
                 onMapResize(this.map, this.deck, renderTarget);
             }
-            this.frameBuffer.bind(gl);
-            gl.clearColor(1, 1, 1, 0);
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+            gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
             _2gisData._2gisCurrentViewport = undefined;
             _2gisData._2gisFramestart = false;
         } else {
-            this.frameBuffer.bind(gl);
-            gl.clearColor(1, 1, 1, 0);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+            gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
-        this.frameBuffer.unbind(gl);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
         drawLayer(this.deck, this.map, this);
 
+        gl.bindFramebuffer((gl as WebGL2RenderingContext).READ_FRAMEBUFFER, this.frameBuffer);
+
+        gl.bindFramebuffer(
+            (gl as WebGL2RenderingContext).DRAW_FRAMEBUFFER,
+            (this.colorBuffer as any)._frameBuffer,
+        );
+
+        (gl as WebGL2RenderingContext).clearBufferfv(
+            (gl as WebGL2RenderingContext).COLOR,
+            0,
+            [0.0, 0.0, 0.0, 0.0],
+        );
+
+        (gl as WebGL2RenderingContext).blitFramebuffer(
+            0,
+            0,
+            mapSize[0] * window.devicePixelRatio,
+            mapSize[1] * window.devicePixelRatio,
+            0,
+            0,
+            mapSize[0] * window.devicePixelRatio,
+            mapSize[1] * window.devicePixelRatio,
+            gl.COLOR_BUFFER_BIT,
+            gl.LINEAR,
+        );
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        const texture = this.frameBuffer.getTexture();
+        const texture = this.colorBuffer.getTexture();
         texture.enable(gl, 0);
         this.program.enable(gl);
         this.program.bind(gl, {
@@ -236,7 +323,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
                 mapSize[0] * window.devicePixelRatio,
                 mapSize[1] * window.devicePixelRatio,
             ],
-            iChannel0: 0,
+            u_sr2d_texture: 0,
             enabled: Number(this.antialiasing),
         });
 
