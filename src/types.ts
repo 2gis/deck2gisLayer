@@ -36,6 +36,7 @@ export interface MapViewState {
  */
 export type CustomRenderInternalProps = {
     _2glRenderTarget: RenderTarget;
+    _2glAliasingTarget: RenderTarget;
     _2glProgram: ShaderProgram;
     _2glVao: Vao;
     _2gisFramestart: boolean;

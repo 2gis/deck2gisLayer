@@ -73,7 +73,7 @@ module.exports = (_, argv) => {
         devServer: {
             contentBase: path.resolve(__dirname, 'dist'),
             host: 'localhost',
-            port: 3000,
+            port: 3030,
             stats: {
                 modules: false,
                 hash: false,
