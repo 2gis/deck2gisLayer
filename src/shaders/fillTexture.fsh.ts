@@ -1,0 +1,1 @@
+export default 'precision mediump float;\nuniform sampler2D u_sr2d_texture;\nvarying vec2 v_vec2_position;\nvoid main()\n{\n    vec4 color = texture2D(u_sr2d_texture, v_vec2_position);\n    gl_FragColor = color;\n}\n';
