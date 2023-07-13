@@ -23,7 +23,6 @@
         "skipLibCheck": true,
     },
     "exclude": [
-        "./tools/**/*",
         "node_modules",
         "dist"
     ]
