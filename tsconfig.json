@@ -21,7 +21,6 @@
         "stripInternal": true,
         "strict": true,
         "skipLibCheck": true,
-        "allowJs": true
     },
     "exclude": [
         "./tools/**/*",

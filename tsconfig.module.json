@@ -3,5 +3,5 @@
     "compilerOptions": {
         "outDir": "./dist/types"
     },
-    "include": ["project.d.ts", "deckgl.d.ts", "src/**/*.ts"]
+    "include": ["index.d.ts", "project.d.ts", "deckgl.d.ts", "src/**/*.ts"],
 }
