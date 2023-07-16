@@ -26,6 +26,14 @@ module.exports = (_, argv) => {
                         },
                     ],
                 },
+                {
+                    test: /\.[vf]f?sh$/,
+                    use: [
+                        {
+                            loader: path.resolve('./tools/shadersLoader.js'),
+                        },
+                    ],
+                },
             ],
         },
         resolve: {

@@ -1,1 +1,0 @@
-export default 'attribute vec2 a_vec2_position;\nvarying vec2 v_vec2_position;\nvoid main() {\n    gl_Position = vec4(a_vec2_position, 0.0, 1.0);\n    v_vec2_position = clamp(a_vec2_position, vec2(0,0), vec2(1,1));\n}\n';
