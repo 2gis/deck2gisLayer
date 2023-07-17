@@ -38,7 +38,7 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
     _customRender?: (reason: string) => void;
     _2gisData?: any;
     _2glRenderTarget?: RenderTarget;
-    _2glRenderBuffer?: WebGLFramebuffer | null;
+    _2glMsaaFrameBuffer?: WebGLFramebuffer | null;
     _2glProgram?: ShaderProgram;
     _2glVao?: Vao;
     _2gisFramestart?: boolean;

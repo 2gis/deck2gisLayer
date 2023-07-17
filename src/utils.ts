@@ -235,7 +235,7 @@ function updateLayers(deck: Deck): void {
 }
 
 /**
- * Internal initializes deck.gl properties for working with the MapGL map.
+ * Internally initializes deck.gl properties for working with the MapGL map.
  * @param map The map instance.
  * @param deck The Deck.gl instance.
  * @param renderTarget 2gl RenderTarget.
@@ -261,7 +261,7 @@ function reInitDeck2gisProps(
         useDevicePixels: true,
         _2gisFramestart: false,
         _2glRenderTarget: renderTarget,
-        _2glRenderBuffer: renderBuffer,
+        _2glMsaaFrameBuffer: renderBuffer,
         _2glProgram: program,
         _2glVao: vao,
         _framebuffer: renderBuffer || (renderTarget as any)._frameBuffer,
@@ -273,7 +273,7 @@ function reInitDeck2gisProps(
             customRender?.(reason);
         },
     };
-    const deck2gisProps: any = {
+    const deck2gisProps: CustomRenderInternalProps = {
         ...customRenderProps,
         parameters: {
             depthMask: true,
