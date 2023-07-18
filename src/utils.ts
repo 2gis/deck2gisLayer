@@ -27,20 +27,20 @@ export function prepareDeckInstance({
     gl,
     deck,
     renderTarget,
-    renderBuffer,
+    msaaFrameBuffer,
 }: {
     map: Map & { __deck?: Deck | null };
     gl: WebGLRenderingContext;
     deck?: Deck;
     renderTarget: RenderTarget;
-    renderBuffer?: WebGLFramebuffer | null;
+    msaaFrameBuffer?: WebGLFramebuffer | null;
 }): Deck | null {
     // Only create one deck instance per context
     if (map.__deck) {
         return map.__deck;
     }
 
-    const deckProps = reInitDeck2gisProps(map, renderTarget, deck, renderBuffer);
+    const deckProps = reInitDeck2gisProps(map, renderTarget, deck, msaaFrameBuffer);
 
     let deckInstance: Deck;
 
@@ -70,7 +70,7 @@ export function prepareDeckInstance({
         'framestart',
         () => ((deck.props as CustomRenderInternalProps)._2gisData._2gisFramestart = true),
     );
-    map.on('resize', () => onMapResize(map, deck, renderTarget, renderBuffer));
+    map.on('resize', () => onMapResize(map, deck, renderTarget, msaaFrameBuffer));
     map.__deck = deckInstance;
     return deckInstance;
 }
@@ -159,7 +159,12 @@ function onMapMove(deck: Deck, map: Map): void {
  * @hidden
  * @internal
  */
-export function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget, renderBuffer?: any) {
+export function onMapResize(
+    map: Map,
+    deck: Deck,
+    renderTarget: RenderTarget,
+    msaaFrameBuffer?: WebGLFramebuffer | null,
+) {
     const mapSize = map.getSize();
     const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
     const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
@@ -167,14 +172,14 @@ export function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget, re
 
     renderTarget.setSize([targetTextureWidth, targetTextureHeight]);
     renderTarget.bind(gl);
-    renderBuffer
+    msaaFrameBuffer
         ? ((deck.props as CustomRenderInternalProps)._2glRenderTarget = renderTarget)
         : (deck.props._framebuffer = (renderTarget as any)._frameBuffer);
     renderTarget.unbind(gl);
 
-    if (renderBuffer) {
+    if (msaaFrameBuffer) {
         const depthRenderBuffer = gl.createRenderbuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, renderBuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
         (gl as WebGL2RenderingContext).renderbufferStorageMultisample(
             gl.RENDERBUFFER,
@@ -195,7 +200,7 @@ export function onMapResize(map: Map, deck: Deck, renderTarget: RenderTarget, re
             targetTextureHeight,
         );
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, renderBuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
 
         gl.framebufferRenderbuffer(
             gl.FRAMEBUFFER,
@@ -246,7 +251,7 @@ function reInitDeck2gisProps(
     map: Map,
     renderTarget: RenderTarget,
     deck?: Deck,
-    renderBuffer?: WebGLFramebuffer | null,
+    msaaFrameBuffer?: WebGLFramebuffer | null,
 ): DeckProps {
     const gl = map.getWebGLContext();
     const customRender = deck && (deck?.props as any)?._customRender;
@@ -261,10 +266,10 @@ function reInitDeck2gisProps(
         useDevicePixels: true,
         _2gisFramestart: false,
         _2glRenderTarget: renderTarget,
-        _2glMsaaFrameBuffer: renderBuffer,
+        _2glMsaaFrameBuffer: msaaFrameBuffer,
         _2glProgram: program,
         _2glVao: vao,
-        _framebuffer: renderBuffer || (renderTarget as any)._frameBuffer,
+        _framebuffer: msaaFrameBuffer || (renderTarget as any)._frameBuffer,
         _customRender: (reason: string) => {
             // todo  need change to public rerender method in mapgl map.triggerRedraw()
             map.triggerRerender();

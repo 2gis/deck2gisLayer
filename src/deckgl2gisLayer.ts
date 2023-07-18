@@ -361,7 +361,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             gl,
             deck,
             renderTarget: this.renderTarget,
-            renderBuffer: this.msaaFrameBuffer,
+            msaaFrameBuffer: this.msaaFrameBuffer,
         });
     }
 
