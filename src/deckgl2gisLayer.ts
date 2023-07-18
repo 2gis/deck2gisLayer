@@ -234,7 +234,6 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
 
         this.programmBinder();
 
-        gl.disable(gl.CULL_FACE);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
