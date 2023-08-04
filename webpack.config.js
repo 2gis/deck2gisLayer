@@ -26,6 +26,14 @@ module.exports = (_, argv) => {
                         },
                     ],
                 },
+                {
+                    test: /\.[vf]f?sh$/,
+                    use: [
+                        {
+                            loader: path.resolve('./tools/shadersLoader.js'),
+                        },
+                    ],
+                },
             ],
         },
         resolve: {
@@ -73,7 +81,7 @@ module.exports = (_, argv) => {
         devServer: {
             contentBase: path.resolve(__dirname, 'dist'),
             host: 'localhost',
-            port: 3000,
+            port: 3030,
             stats: {
                 modules: false,
                 hash: false,

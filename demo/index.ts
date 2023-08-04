@@ -11,9 +11,10 @@ const map = new mapgl.Map('container', {
     zoom: 14.1,
     pitch: 40,
     key: '4970330e-7f1c-4921-808c-0eb7c4e63001',
+    webglVersion: 2,
 });
 
-const deck = new Deck(initDeck2gisProps(map));
+const deck = new Deck(initDeck2gisProps(map, { antialiasing: 'msaa' }));
 map.once('ready', () => {
     initDeckGL();
 });
@@ -58,8 +59,8 @@ function createHexagonLayer(data) {
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
-        opacity: 0.8,
-        radius: 480,
+        opacity: 1,
+        radius: 380,
         elevationScale: 2,
         getPosition: (d: any) => [d.point.lon, d.point.lat],
         extruded: true,
@@ -77,11 +78,11 @@ function createHexagonLayer2(data) {
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
-        opacity: 0.2,
-        radius: 700,
+        opacity: 0.5,
+        radius: 500,
         elevationScale: 1,
         getPosition: (d: any) => [d.point.lon, d.point.lat],
-        extruded: true,
+        extruded: false,
     });
 
     return layer;

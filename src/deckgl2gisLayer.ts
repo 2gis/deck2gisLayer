@@ -11,7 +11,7 @@ import {
     onMapResize,
 } from './utils';
 import type { Deck, Layer } from '@deck.gl/core/typed';
-import { CustomRenderProps, DeckCustomLayer } from './types';
+import { CustomRenderInternalProps, CustomRenderProps, DeckCustomLayer } from './types';
 import type { Map } from '@2gis/mapgl/types';
 
 import RenderTarget from '2gl/RenderTarget';
@@ -63,7 +63,8 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     static initDeck2gisProps = (map: Map, deckProps?: CustomRenderProps) =>
         initDeck2gisProps(map, deckProps);
 
-    private frameBuffer?: RenderTarget;
+    private renderTarget?: RenderTarget;
+    private msaaFrameBuffer?: WebGLFramebuffer | null;
     private program?: ShaderProgram;
     private vao?: Vao;
 
@@ -105,29 +106,17 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      */
     public onAdd = () => {
         if (!this.map && this.props?.deck && !this.isDestroyed) {
-            const map = (this.props.deck.props as CustomRenderProps)._2gisData._2gisMap;
+            const deck = this.props?.deck;
+            const map = (this.props.deck.props as CustomRenderInternalProps)._2gisData._2gisMap;
             this.map = map;
             const gl = (this.gl = map.getWebGLContext());
             if ((map as any).__deck) {
                 this.deck = (map as any).__deck;
-                this.frameBuffer = (this.deck as any).props._2glRenderTarget;
+                this.renderTarget = (this.deck as any).props._2glRenderTarget;
+                this.msaaFrameBuffer = (this.deck as any).props._2glMsaaFrameBuffer;
             }
-
-            if (!this.frameBuffer || !this.deck) {
-                const mapSize = map.getSize();
-                this.frameBuffer = new RenderTarget({
-                    size: [
-                        Math.ceil(mapSize[0] * window.devicePixelRatio),
-                        Math.ceil(mapSize[1] * window.devicePixelRatio),
-                    ],
-                    magFilter: Texture.LinearFilter,
-                    minFilter: Texture.LinearFilter,
-                    wrapS: Texture.ClampToEdgeWrapping,
-                    wrapT: Texture.ClampToEdgeWrapping,
-                });
-                const renderTarget = this.frameBuffer.bind(gl);
-                this.frameBuffer.unbind(gl);
-                this.deck = prepareDeckInstance({ map, gl, deck: this.props.deck, renderTarget });
+            if (!this.renderTarget || !this.deck) {
+                this.initRenderTarget(gl, map, deck);
             }
             if (this.deck) {
                 this.program = (this.deck as any).props._2glProgram;
@@ -175,7 +164,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     public destroy = () => {
         this.deck = null;
         this.map = null;
-        this.frameBuffer = undefined;
+        this.renderTarget = undefined;
         this.program = undefined;
         this.vao = undefined;
         this.gl = undefined;
@@ -194,58 +183,189 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             !this.deck ||
             !(this.deck as any).layerManager ||
             !this.map ||
-            !this.frameBuffer ||
+            !this.renderTarget ||
             !this.program ||
             !this.vao ||
             !this.gl ||
-            !this.props
+            !this.props ||
+            !(this.deck.props as CustomRenderInternalProps)._2glRenderTarget
         ) {
             return;
         }
         const mapSize = this.map.getSize();
-        const { _2gisData } = this.deck.props as CustomRenderProps;
+        const { _2gisData } = this.deck.props as CustomRenderInternalProps;
         const gl = this.gl;
 
         if (_2gisData._2gisFramestart) {
             if (this.deck.width !== mapSize[0] || this.deck.height !== mapSize[1]) {
                 (this.deck as any).animationLoop._resizeCanvasDrawingBuffer();
                 (this.deck as any).animationLoop._resizeViewport();
-                const renderTarget = this.frameBuffer.bind(this.gl);
-                onMapResize(this.map, this.deck, renderTarget);
+                const renderTarget = this.renderTarget.bind(this.gl);
+                onMapResize(this.map, this.deck, renderTarget, this.msaaFrameBuffer);
             }
-            this.frameBuffer.bind(gl);
+            this.msaaFrameBuffer
+                ? gl.bindFramebuffer(gl.FRAMEBUFFER, this.msaaFrameBuffer)
+                : this.renderTarget.bind(gl);
             gl.clearColor(1, 1, 1, 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
             _2gisData._2gisCurrentViewport = undefined;
             _2gisData._2gisFramestart = false;
         } else {
-            this.frameBuffer.bind(gl);
+            this.msaaFrameBuffer
+                ? gl.bindFramebuffer(gl.FRAMEBUFFER, this.msaaFrameBuffer)
+                : this.renderTarget.bind(gl);
             gl.clearColor(1, 1, 1, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
-        this.frameBuffer.unbind(gl);
+        this.renderTarget.unbind(gl);
+
         drawLayer(this.deck, this.map, this);
 
+        if (this.msaaFrameBuffer) {
+            this.blitMsaaFrameBuffer();
+        }
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        const texture = this.frameBuffer.getTexture();
+        const texture = this.renderTarget.getTexture();
         texture.enable(gl, 0);
         this.program.enable(gl);
-        this.program.bind(gl, {
-            iResolution: [
-                mapSize[0] * window.devicePixelRatio,
-                mapSize[1] * window.devicePixelRatio,
-            ],
-            iChannel0: 0,
-            enabled: Number(this.antialiasing),
-        });
+
+        this.programmBinder();
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    };
+
+    private programmBinder() {
+        if (!this.deck || !this.map || !this.program || !this.vao || !this.gl) {
+            return;
+        }
+
+        const mapSize = this.map.getSize();
+        const gl = this.gl;
+        if (this.currentAntialiasingMode() === 'fxaa') {
+            this.program.bind(gl, {
+                iResolution: [
+                    mapSize[0] * window.devicePixelRatio,
+                    mapSize[1] * window.devicePixelRatio,
+                ],
+                u_sr2d_texture: 0,
+                enabled: 1,
+            });
+        } else {
+            this.program.bind(gl, {
+                u_sr2d_texture: 0,
+            });
+        }
 
         this.vao.bind({
             gl,
             extensions: { OES_vertex_array_object: gl.getExtension('OES_vertex_array_object') },
         });
+    }
 
-        gl.disable(gl.CULL_FACE);
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-    };
+    private blitMsaaFrameBuffer() {
+        const gl = this.gl;
+        const mapSize = this.map?.getSize();
+        if (this.msaaFrameBuffer && mapSize && gl && !(gl instanceof WebGLRenderingContext)) {
+            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.msaaFrameBuffer);
+
+            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, (this.renderTarget as any)._frameBuffer);
+
+            gl.clearBufferfv(gl.COLOR, 0, [0.0, 0.0, 0.0, 0.0]);
+
+            gl.blitFramebuffer(
+                0,
+                0,
+                mapSize[0] * window.devicePixelRatio,
+                mapSize[1] * window.devicePixelRatio,
+                0,
+                0,
+                mapSize[0] * window.devicePixelRatio,
+                mapSize[1] * window.devicePixelRatio,
+                gl.COLOR_BUFFER_BIT,
+                gl.NEAREST,
+            );
+        }
+    }
+
+    private initRenderTarget(
+        gl: WebGL2RenderingContext | WebGLRenderingContext,
+        map: Map,
+        deck: Deck,
+    ) {
+        const mapSize = map.getSize();
+        const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
+        const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
+        this.renderTarget = new RenderTarget({
+            size: [targetTextureWidth, targetTextureHeight],
+            magFilter: Texture.LinearFilter,
+            minFilter: Texture.LinearFilter,
+            wrapS: Texture.ClampToEdgeWrapping,
+            wrapT: Texture.ClampToEdgeWrapping,
+        });
+        this.renderTarget.bind(gl);
+        this.renderTarget.unbind(gl);
+
+        if (
+            !(gl instanceof WebGLRenderingContext) &&
+            this.currentAntialiasingMode() === 'msaa' &&
+            gl.getContextAttributes()?.antialias === false
+        ) {
+            const msaaFrameBuffer = gl.createFramebuffer();
+            const depthRenderBuffer = gl.createRenderbuffer();
+            gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
+            gl.renderbufferStorageMultisample(
+                gl.RENDERBUFFER,
+                4,
+                gl.DEPTH_COMPONENT16,
+                targetTextureWidth,
+                targetTextureHeight,
+            );
+
+            const colorRenderBuffer = gl.createRenderbuffer();
+            gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
+
+            gl.renderbufferStorageMultisample(
+                gl.RENDERBUFFER,
+                4,
+                gl.RGBA8,
+                targetTextureWidth,
+                targetTextureHeight,
+            );
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
+
+            gl.framebufferRenderbuffer(
+                gl.FRAMEBUFFER,
+                gl.COLOR_ATTACHMENT0,
+                gl.RENDERBUFFER,
+                colorRenderBuffer,
+            );
+
+            gl.framebufferRenderbuffer(
+                gl.FRAMEBUFFER,
+                gl.DEPTH_ATTACHMENT,
+                gl.RENDERBUFFER,
+                depthRenderBuffer,
+            );
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+            this.msaaFrameBuffer = msaaFrameBuffer;
+        }
+
+        this.deck = prepareDeckInstance({
+            map,
+            gl,
+            deck,
+            renderTarget: this.renderTarget,
+            msaaFrameBuffer: this.msaaFrameBuffer,
+        });
+    }
+
+    private currentAntialiasingMode() {
+        return (this.props?.deck.props as CustomRenderProps).antialiasing;
+    }
 }

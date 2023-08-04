@@ -34,17 +34,23 @@ export interface MapViewState {
  * @hidden
  * @internal
  */
-export type CustomRenderInternalProps = {
-    _2glRenderTarget: RenderTarget;
-    _2glProgram: ShaderProgram;
-    _2glVao: Vao;
-    _2gisFramestart: boolean;
-    _customRender: (reason: string) => void;
+export type CustomRenderInternalProps = Partial<DeckProps> & {
+    _customRender?: (reason: string) => void;
     _2gisData?: any;
+    _2glRenderTarget?: RenderTarget;
+    _2glMsaaFrameBuffer?: WebGLFramebuffer | null;
+    _2glProgram?: ShaderProgram;
+    _2glVao?: Vao;
+    _2gisFramestart?: boolean;
+    _antialiasing?: AntiAliasingMode;
 };
+
+export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
+
+export type CustomRenderProps = { antialiasing?: AntiAliasingMode };
 
 /**
  * CustomRenderProps is type extends from DeckProps:
  * https://deck.gl/docs/api-reference/core/deck#properties
  */
-export type CustomRenderProps = Partial<DeckProps> & CustomRenderInternalProps;
+export type DeckRenderProps = Partial<DeckProps> & CustomRenderProps;
