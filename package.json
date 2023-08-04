@@ -40,5 +40,8 @@
   "dependencies": {
     "@deck.gl/core": "8.8.17",
     "2gl": "0.10.2"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.2"
   }
 }
