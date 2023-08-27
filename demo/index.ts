@@ -1,5 +1,6 @@
 import { Deck2gisLayer } from '../src';
 import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers/typed';
+import { TextLayer } from '@deck.gl/layers';
 import { Color, Deck } from '@deck.gl/core/typed';
 import { data } from './data';
 import { initDeck2gisProps } from '../src/utils';
@@ -22,10 +23,12 @@ map.once('ready', () => {
 function initDeckGL() {
     const deckLayer = createHeatmapLayer(data);
     map.addLayer(deckLayer);
-    const deckLayer2 = createHexagonLayer(data);
-    map.addLayer(deckLayer2);
+    
     const deckLayer3 = createHexagonLayer2(data);
     map.addLayer(deckLayer3);
+
+    const deckLayer2 = createTextlayer(data);
+    map.addLayer(deckLayer2);
 }
 
 const COLOR_RANGE: Color[] = [
@@ -36,6 +39,26 @@ const COLOR_RANGE: Color[] = [
     [254, 173, 84],
     [209, 55, 78],
 ];
+
+function createTextlayer(data) {
+    const layer = new Deck2gisLayer<TextLayer>({
+        id: 'text-layer',
+        data,
+        deck,
+        type: TextLayer,
+        characterSet: 'auto',
+        fontFamily: 'SBSansText, Helvetica, Arial, sans-serif',
+        getBackgroundColor: [66, 0, 255, 66],
+        getColor: [255, 128, 0],
+        getPosition: (d) => [d.point.lon, d.point.lat],
+        getText: (d) => '' + d.values.capacity,
+        getSize: 14,
+        background: true,
+        parameters: { depthTest: true },
+    });
+
+    return layer;
+}
 
 function createHeatmapLayer(data) {
     const layer = new Deck2gisLayer<HeatmapLayer>({
@@ -59,12 +82,11 @@ function createHexagonLayer(data) {
         type: HexagonLayer,
         data,
         parameters: { depthTest: true },
-        opacity: 1,
+        opacity: 0.4,
         radius: 380,
         elevationScale: 2,
         getPosition: (d: any) => [d.point.lon, d.point.lat],
         extruded: true,
-        antialiasing: true,
     });
 
     return layer;

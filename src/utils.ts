@@ -118,7 +118,7 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
         return;
     }
 
-    stateBinder(map, layer);
+    stateBinder(map.getWebGLContext(), layer);
 
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
@@ -228,6 +228,8 @@ function updateLayers(deck: Deck): void {
     if (deck['layerManager']) {
         const layers: Layer<any>[] = [];
         let layerIndex = 0;
+        const gl = deck.props.gl;
+        gl && stateBinder(gl);
         (deck.props as CustomRenderInternalProps)._2gisData._2gisCustomLayers.forEach(
             (deckLayer) => {
                 const LayerType = deckLayer.props.type;
@@ -350,13 +352,13 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
  * @hidden
  * @internal
  */
-function stateBinder(map: Map, layer: Deck2gisLayer<any>) {
-    const gl = map.getWebGLContext();
-    if (!layer.props?.parameters?.cullFaceEnabled) {
+function stateBinder(gl: WebGLRenderingContext | WebGL2RenderingContext, layer?: Deck2gisLayer<any>) {
+    if (!layer?.props?.parameters?.cullFaceEnabled) {
         gl.disable(gl.CULL_FACE);
     }
     gl.clearDepth(1);
     gl.clear(gl.DEPTH_BUFFER_BIT);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 }
 
 /**
