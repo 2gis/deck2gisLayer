@@ -21,14 +21,14 @@ map.once('ready', () => {
 });
 
 function initDeckGL() {
-    const deckLayer = createHeatmapLayer(data);
-    map.addLayer(deckLayer);
-    
+    const deckLayer1 = createHeatmapLayer(data);
+    map.addLayer(deckLayer1);
+    const deckLayer2 = createHexagonLayer(data);
+    map.addLayer(deckLayer2);
     const deckLayer3 = createHexagonLayer2(data);
     map.addLayer(deckLayer3);
-
-    const deckLayer2 = createTextlayer(data);
-    map.addLayer(deckLayer2);
+    const deckLayer4 = createTextlayer(data);
+    map.addLayer(deckLayer4);
 }
 
 const COLOR_RANGE: Color[] = [

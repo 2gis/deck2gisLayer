@@ -352,7 +352,10 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
  * @hidden
  * @internal
  */
-function stateBinder(gl: WebGLRenderingContext | WebGL2RenderingContext, layer?: Deck2gisLayer<any>) {
+function stateBinder(
+    gl: WebGLRenderingContext | WebGL2RenderingContext,
+    layer?: Deck2gisLayer<any>,
+) {
     if (!layer?.props?.parameters?.cullFaceEnabled) {
         gl.disable(gl.CULL_FACE);
     }
