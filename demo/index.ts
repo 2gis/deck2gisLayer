@@ -15,9 +15,9 @@ const map = new mapgl.Map('container', {
     webglVersion: 2,
 });
 
-const deck = new Deck(initDeck2gisProps(map, { antialiasing: 'msaa' }));
-map.once('ready', () => {
-    initDeckGL();
+const deck = new Deck(initDeck2gisProps(map, { antialiasing: 'none' }));
+map.once('styleload', () => {
+    setTimeout(() => initDeckGL(), 3000);
 });
 
 function initDeckGL() {
@@ -40,13 +40,26 @@ const COLOR_RANGE: Color[] = [
     [209, 55, 78],
 ];
 
+function getCharacters() {
+    const charSet = 'МмЛлРрДдНнKkMmКкМм1234567890'.split('');
+
+    for (let i = 32; i < 128; i++) {
+        // eslint-disable-next-line functional/immutable-data
+        charSet.push(String.fromCharCode(i));
+    }
+
+    return charSet;
+}
+
+export const characterSet = getCharacters();
+
 function createTextlayer(data) {
     const layer = new Deck2gisLayer<TextLayer>({
         id: 'text-layer',
         data,
         deck,
         type: TextLayer,
-        characterSet: 'auto',
+        characterSet,
         fontFamily: 'SBSansText, Helvetica, Arial, sans-serif',
         getBackgroundColor: [66, 0, 255, 66],
         getColor: [255, 128, 0],
@@ -54,7 +67,6 @@ function createTextlayer(data) {
         getText: (d) => '' + d.values.capacity,
         getSize: 14,
         background: true,
-        parameters: { depthTest: true },
     });
 
     return layer;
