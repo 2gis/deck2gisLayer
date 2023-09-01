@@ -105,30 +105,37 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * MapGL calls this method after adding a layer to a map.
      */
     public onAdd = () => {
-        if (!this.map && this.props?.deck && !this.isDestroyed) {
-            const deck = this.props?.deck;
-            const map = (this.props.deck.props as CustomRenderInternalProps)._2gisData._2gisMap;
-            this.map = map;
-            const gl = (this.gl = map.getWebGLContext());
-            if ((map as any).__deck) {
-                this.deck = (map as any).__deck;
-                this.renderTarget = (this.deck as any).props._2glRenderTarget;
-                this.msaaFrameBuffer = (this.deck as any).props._2glMsaaFrameBuffer;
-            }
-            if (!this.renderTarget || !this.deck) {
-                this.initRenderTarget(gl, map, deck);
-            }
-            if (this.deck) {
-                this.program = (this.deck as any).props._2glProgram;
-                this.vao = (this.deck as any).props._2glVao;
-            }
-        }
+        const map: Map = (this.props?.deck.props as CustomRenderInternalProps)._2gisData._2gisMap;
 
-        if (this.deck && !this.isDestroyed) {
-            addLayer(this.deck, this);
-        }
+        // fix wrong initRender use when add layer in map on move
+        const initBeforeAdd = () => {
+            if (!this.map && this.props?.deck && !this.isDestroyed) {
+                const deck = this.props?.deck;
+                this.map = map;
+                const gl = (this.gl = map.getWebGLContext());
+                if ((map as any).__deck) {
+                    this.deck = (map as any).__deck;
+                    this.renderTarget = (this.deck as any).props._2glRenderTarget;
+                    this.msaaFrameBuffer = (this.deck as any).props._2glMsaaFrameBuffer;
+                }
+                if (!this.renderTarget || !this.deck) {
+                    this.initRenderTarget(gl, map, deck);
+                }
+                if (this.deck) {
+                    this.program = (this.deck as any).props._2glProgram;
+                    this.vao = (this.deck as any).props._2glVao;
+                }
+            }
+
+            if (this.deck && !this.isDestroyed) {
+                addLayer(this.deck, this);
+            }
+        };
+
+        if ((map as any).__deck) {
+            initBeforeAdd();
+        } else [map.once('idle', () => initBeforeAdd())];
     };
-
     /**
      * @hidden
      * @internal
