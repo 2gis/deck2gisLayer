@@ -17,6 +17,7 @@ import fill_vsh from './shaders/fillTexture.vsh';
 
 import { AntiAliasingMode, CustomRenderInternalProps, CustomRenderProps } from './types';
 import { DeckProps } from '@deck.gl/core/typed';
+import Texture from '2gl/Texture';
 
 /**
  * @hidden
@@ -35,11 +36,6 @@ export function prepareDeckInstance({
     renderTarget: RenderTarget;
     msaaFrameBuffer?: WebGLFramebuffer | null;
 }): Deck | null {
-    // Only create one deck instance per context
-    if (map.__deck) {
-        return map.__deck;
-    }
-
     const deckProps = reInitDeck2gisProps(map, renderTarget, deck, msaaFrameBuffer);
 
     let deckInstance: Deck;
@@ -105,7 +101,7 @@ export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
  * @hidden
  * @internal
  */
-export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
+export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): boolean {
     let currentViewport = (deck.props as CustomRenderInternalProps)._2gisData._2gisCurrentViewport;
     if (!currentViewport) {
         // This is the first layer drawn in this render cycle.
@@ -115,16 +111,22 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
     }
 
     if (!(deck as any).layerManager) {
-        return;
+        return false;
+    }
+
+    const deckLayers = (deck as any).layerManager.layers;
+
+    if (!deckLayers.some((deckLayer) => layer.id === deckLayer.id)) {
+        return false;
     }
 
     stateBinder(map.getWebGLContext(), layer);
-
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
-        layerFilter: ({ layer: deckLayer }) => layer.id === deckLayer.id,
+        layerFilter: ({ layer: deckLayer }) =>  layer.id === deckLayer.id,
         clearCanvas: false,
     });
+    return true;
 }
 
 /**
@@ -293,7 +295,8 @@ function reInitDeck2gisProps(
         },
         _antialiasing: (deck?.props as CustomRenderProps).antialiasing || 'none',
         _2gisData: {
-            _2gisCustomLayers: new Set(),
+            _2gisCustomLayers:
+                (deck?.props as CustomRenderInternalProps)._2gisData._2gisCustomLayers || new Set(),
             _2gisMap: map,
         },
         views: [new MapView({ id: '2gis' })],
@@ -315,7 +318,7 @@ function reInitDeck2gisProps(
  * @param map The map instance.
  * @param deckProps CustomRenderProps initialization options.
  */
-export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
+export function initDeck2gis(map: Map, Deck: any, deckProps?: CustomRenderProps): Deck {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {
         ...deckProps,
@@ -333,7 +336,8 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
             _2gisMap: map,
         },
         _antialiasing: deckProps?.antialiasing || 'none',
-        views: [new MapView({ id: '2gis' })],
+        _skipMapAddRemoveEvents: deckProps?.skipMapAddRemoveEvents || false,
+        views: [new MapView({ id: '2gis', x: 0, y: 0, height: 1, width: 1 })],
     };
     // deck is using the WebGLContext created by 2gis
     // block deck from setting the canvas size
@@ -344,7 +348,91 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
         touchAction: 'unset',
         viewState: getViewState(map),
     });
-    return deck2gisProps;
+    const deck = new (Deck as any)(deck2gisProps);
+    if (map.isIdle()) {
+        initRenderTarget(gl, map, deck);
+    } else {
+        map.once('idle', () => initRenderTarget(gl, map, deck));
+    }
+    (map as any).__deck = deck;
+    return deck;
+}
+
+/**
+ * @hidden
+ * @internal
+ */
+function initRenderTarget(
+    gl: WebGL2RenderingContext | WebGLRenderingContext,
+    map: Map,
+    deck: Deck,
+) {
+    const mapSize = map.getSize();
+    const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
+    const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
+    const renderTarget = new RenderTarget({
+        size: [targetTextureWidth, targetTextureHeight],
+        magFilter: Texture.LinearFilter,
+        minFilter: Texture.LinearFilter,
+        wrapS: Texture.ClampToEdgeWrapping,
+        wrapT: Texture.ClampToEdgeWrapping,
+    });
+    renderTarget.bind(gl);
+    renderTarget.unbind(gl);
+    let msaaFrameBuffer;
+    if (
+        !(gl instanceof WebGLRenderingContext) &&
+        (deck.props as CustomRenderProps).antialiasing === 'msaa' &&
+        gl.getContextAttributes()?.antialias === false
+    ) {
+        msaaFrameBuffer = gl.createFramebuffer();
+        const depthRenderBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
+        gl.renderbufferStorageMultisample(
+            gl.RENDERBUFFER,
+            4,
+            gl.DEPTH_COMPONENT16,
+            targetTextureWidth,
+            targetTextureHeight,
+        );
+
+        const colorRenderBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
+
+        gl.renderbufferStorageMultisample(
+            gl.RENDERBUFFER,
+            4,
+            gl.RGBA8,
+            targetTextureWidth,
+            targetTextureHeight,
+        );
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
+
+        gl.framebufferRenderbuffer(
+            gl.FRAMEBUFFER,
+            gl.COLOR_ATTACHMENT0,
+            gl.RENDERBUFFER,
+            colorRenderBuffer,
+        );
+
+        gl.framebufferRenderbuffer(
+            gl.FRAMEBUFFER,
+            gl.DEPTH_ATTACHMENT,
+            gl.RENDERBUFFER,
+            depthRenderBuffer,
+        );
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    prepareDeckInstance({
+        map,
+        gl,
+        deck,
+        renderTarget: renderTarget,
+        msaaFrameBuffer: msaaFrameBuffer,
+    });
 }
 
 // Fix heatmap layer render: need reset gl state after each draw layers
@@ -352,7 +440,7 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
  * @hidden
  * @internal
  */
-function stateBinder(
+export function stateBinder(
     gl: WebGLRenderingContext | WebGL2RenderingContext,
     layer?: Deck2gisLayer<any>,
 ) {

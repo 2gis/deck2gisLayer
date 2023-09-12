@@ -2,22 +2,17 @@
 // https://github.com/visgl/deck.gl/tree/master/modules/mapbox
 
 import {
-    prepareDeckInstance,
     addLayer,
     removeLayer,
     updateLayer,
     drawLayer,
-    initDeck2gisProps,
+    initDeck2gis,
     onMapResize,
+    stateBinder,
 } from './utils';
 import type { Deck, Layer } from '@deck.gl/core/typed';
 import { CustomRenderInternalProps, CustomRenderProps, DeckCustomLayer } from './types';
 import type { Map } from '@2gis/mapgl/types';
-
-import RenderTarget from '2gl/RenderTarget';
-import Texture from '2gl/Texture';
-import type Vao from '2gl/Vao';
-import type ShaderProgram from '2gl/ShaderProgram';
 
 /**
  * Any Layer class from deck.gl.
@@ -60,13 +55,8 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * @param map The map instance.
      * @param deckProps CustomRenderProps initialization options.
      */
-    static initDeck2gisProps = (map: Map, deckProps?: CustomRenderProps) =>
-        initDeck2gisProps(map, deckProps);
-
-    private renderTarget?: RenderTarget;
-    private msaaFrameBuffer?: WebGLFramebuffer | null;
-    private program?: ShaderProgram;
-    private vao?: Vao;
+    static initDeck2gis = (map: Map, Deck: Deck, deckProps?: CustomRenderProps) =>
+        initDeck2gis(map, Deck, deckProps);
 
     /* eslint-disable no-this-before-super */
     /**
@@ -107,34 +97,21 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     public onAdd = () => {
         const map: Map = (this.props?.deck.props as CustomRenderInternalProps)._2gisData._2gisMap;
 
-        // fix wrong initRender use when add layer in map on move
-        const initBeforeAdd = () => {
-            if (!this.map && this.props?.deck && !this.isDestroyed) {
-                const deck = this.props?.deck;
-                this.map = map;
-                const gl = (this.gl = map.getWebGLContext());
-                if ((map as any).__deck) {
-                    this.deck = (map as any).__deck;
-                    this.renderTarget = (this.deck as any).props._2glRenderTarget;
-                    this.msaaFrameBuffer = (this.deck as any).props._2glMsaaFrameBuffer;
-                }
-                if (!this.renderTarget || !this.deck) {
-                    this.initRenderTarget(gl, map, deck);
-                }
-                if (this.deck) {
-                    this.program = (this.deck as any).props._2glProgram;
-                    this.vao = (this.deck as any).props._2glVao;
-                }
+        if (!this.map && this.props?.deck && !this.isDestroyed) {
+            this.map = map;
+            if ((map as any).__deck) {
+                this.deck = (map as any).__deck;
+                this.gl = map.getWebGLContext();
             }
+        }
 
-            if (this.deck && !this.isDestroyed) {
-                addLayer(this.deck, this);
-            }
-        };
+        if ((this.props?.deck.props as CustomRenderProps).skipMapAddRemoveEvents) {
+            return;
+        }
 
-        if ((map as any).__deck) {
-            initBeforeAdd();
-        } else [map.once('idle', () => initBeforeAdd())];
+        if (this.deck && !this.isDestroyed) {
+            addLayer(this.deck, this);
+        }
     };
     /**
      * @hidden
@@ -142,6 +119,9 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * MapGL calls this method after removing a layer from a map.
      */
     public onRemove = () => {
+        if ((this.props?.deck.props as CustomRenderProps).skipMapAddRemoveEvents) {
+            return;
+        }
         if (this.deck) {
             removeLayer(this.deck, this);
         }
@@ -165,15 +145,21 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         }
     }
 
+    public getDeckLayer(): Layer {
+        if (this.gl) {
+            stateBinder(this.gl, this);
+        }
+        const deckLayer = this;
+        const LayerType = deckLayer?.props?.type;
+        return new LayerType(deckLayer.props);
+    }
+
     /**
      * Destroys the layer and frees all related resources.
      */
     public destroy = () => {
         this.deck = null;
         this.map = null;
-        this.renderTarget = undefined;
-        this.program = undefined;
-        this.vao = undefined;
         this.gl = undefined;
         this.isDestroyed = true;
         this.props = undefined;
@@ -185,17 +171,21 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
      * MapGL calls this method on each map frame rendering.
      */
     public render = () => {
+        if (!this.deck || !this.map || !this.gl) {
+            return;
+        }
+        const program = (this.deck.props as CustomRenderInternalProps)._2glProgram;
+        const vao = (this.deck.props as CustomRenderInternalProps)._2glVao;
+        const renderTarget = (this.deck.props as CustomRenderInternalProps)._2glRenderTarget;
+        const msaaFrameBuffer = (this.deck.props as CustomRenderInternalProps)._2glMsaaFrameBuffer;
         if (
             this.isDestroyed ||
             !this.deck ||
             !(this.deck as any).layerManager ||
             !this.map ||
-            !this.renderTarget ||
-            !this.program ||
-            !this.vao ||
-            !this.gl ||
-            !this.props ||
-            !(this.deck.props as CustomRenderInternalProps)._2glRenderTarget
+            !program ||
+            !vao ||
+            !renderTarget
         ) {
             return;
         }
@@ -207,52 +197,61 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             if (this.deck.width !== mapSize[0] || this.deck.height !== mapSize[1]) {
                 (this.deck as any).animationLoop._resizeCanvasDrawingBuffer();
                 (this.deck as any).animationLoop._resizeViewport();
-                const renderTarget = this.renderTarget.bind(this.gl);
-                onMapResize(this.map, this.deck, renderTarget, this.msaaFrameBuffer);
+                renderTarget.bind(this.gl);
+                onMapResize(this.map, this.deck, renderTarget, msaaFrameBuffer);
             }
-            this.msaaFrameBuffer
-                ? gl.bindFramebuffer(gl.FRAMEBUFFER, this.msaaFrameBuffer)
-                : this.renderTarget.bind(gl);
+            msaaFrameBuffer
+                ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer)
+                : renderTarget.bind(gl);
             gl.clearColor(1, 1, 1, 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             _2gisData._2gisCurrentViewport = undefined;
             _2gisData._2gisFramestart = false;
         } else {
-            this.msaaFrameBuffer
-                ? gl.bindFramebuffer(gl.FRAMEBUFFER, this.msaaFrameBuffer)
-                : this.renderTarget.bind(gl);
+            msaaFrameBuffer
+                ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer)
+                : renderTarget.bind(gl);
             gl.clearColor(1, 1, 1, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
-        this.renderTarget.unbind(gl);
+        renderTarget.unbind(gl);
 
-        drawLayer(this.deck, this.map, this);
+        const needDraw = drawLayer(this.deck, this.map, this);
 
-        if (this.msaaFrameBuffer) {
-            this.blitMsaaFrameBuffer();
+        if (needDraw && this.currentAntialiasingMode() !== 'none') {
+            if (msaaFrameBuffer) {
+                this.blitMsaaFrameBuffer();
+            }
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            const texture = renderTarget.getTexture();
+            texture.enable(gl, 0);
+            program.enable(gl);
+
+            this.programmBinder();
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        const texture = this.renderTarget.getTexture();
-        texture.enable(gl, 0);
-        this.program.enable(gl);
-
-        this.programmBinder();
-
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
     private programmBinder() {
-        if (!this.deck || !this.map || !this.program || !this.vao || !this.gl) {
+        if (!this.deck || !this.map || !this.gl) {
+            return;
+        }
+        const gl = this.gl;
+        const program = (this.deck.props as CustomRenderInternalProps)._2glProgram;
+        const vao = (this.deck.props as CustomRenderInternalProps)._2glVao;
+
+        if (!program || !vao) {
             return;
         }
 
         const mapSize = this.map.getSize();
-        const gl = this.gl;
+
         if (this.currentAntialiasingMode() === 'fxaa') {
-            this.program.bind(gl, {
+            program.bind(gl, {
                 iResolution: [
                     mapSize[0] * window.devicePixelRatio,
                     mapSize[1] * window.devicePixelRatio,
@@ -261,12 +260,12 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
                 enabled: 1,
             });
         } else {
-            this.program.bind(gl, {
+            program.bind(gl, {
                 u_sr2d_texture: 0,
             });
         }
 
-        this.vao.bind({
+        vao.bind({
             gl,
             extensions: { OES_vertex_array_object: gl.getExtension('OES_vertex_array_object') },
         });
@@ -274,11 +273,13 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
 
     private blitMsaaFrameBuffer() {
         const gl = this.gl;
+        const msaaFrameBuffer = (this.deck?.props as CustomRenderInternalProps)._2glMsaaFrameBuffer;
+        const renderTarget = (this.deck?.props as CustomRenderInternalProps)._2glRenderTarget;
         const mapSize = this.map?.getSize();
-        if (this.msaaFrameBuffer && mapSize && gl && !(gl instanceof WebGLRenderingContext)) {
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.msaaFrameBuffer);
+        if (msaaFrameBuffer && mapSize && gl && !(gl instanceof WebGLRenderingContext)) {
+            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, msaaFrameBuffer);
 
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, (this.renderTarget as any)._frameBuffer);
+            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, (renderTarget as any)._frameBuffer);
 
             gl.clearBufferfv(gl.COLOR, 0, [0.0, 0.0, 0.0, 0.0]);
 
@@ -295,81 +296,6 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
                 gl.NEAREST,
             );
         }
-    }
-
-    private initRenderTarget(
-        gl: WebGL2RenderingContext | WebGLRenderingContext,
-        map: Map,
-        deck: Deck,
-    ) {
-        const mapSize = map.getSize();
-        const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
-        const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
-        this.renderTarget = new RenderTarget({
-            size: [targetTextureWidth, targetTextureHeight],
-            magFilter: Texture.LinearFilter,
-            minFilter: Texture.LinearFilter,
-            wrapS: Texture.ClampToEdgeWrapping,
-            wrapT: Texture.ClampToEdgeWrapping,
-        });
-        this.renderTarget.bind(gl);
-        this.renderTarget.unbind(gl);
-
-        if (
-            !(gl instanceof WebGLRenderingContext) &&
-            this.currentAntialiasingMode() === 'msaa' &&
-            gl.getContextAttributes()?.antialias === false
-        ) {
-            const msaaFrameBuffer = gl.createFramebuffer();
-            const depthRenderBuffer = gl.createRenderbuffer();
-            gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
-            gl.renderbufferStorageMultisample(
-                gl.RENDERBUFFER,
-                4,
-                gl.DEPTH_COMPONENT16,
-                targetTextureWidth,
-                targetTextureHeight,
-            );
-
-            const colorRenderBuffer = gl.createRenderbuffer();
-            gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
-
-            gl.renderbufferStorageMultisample(
-                gl.RENDERBUFFER,
-                4,
-                gl.RGBA8,
-                targetTextureWidth,
-                targetTextureHeight,
-            );
-
-            gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
-
-            gl.framebufferRenderbuffer(
-                gl.FRAMEBUFFER,
-                gl.COLOR_ATTACHMENT0,
-                gl.RENDERBUFFER,
-                colorRenderBuffer,
-            );
-
-            gl.framebufferRenderbuffer(
-                gl.FRAMEBUFFER,
-                gl.DEPTH_ATTACHMENT,
-                gl.RENDERBUFFER,
-                depthRenderBuffer,
-            );
-
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-            this.msaaFrameBuffer = msaaFrameBuffer;
-        }
-
-        this.deck = prepareDeckInstance({
-            map,
-            gl,
-            deck,
-            renderTarget: this.renderTarget,
-            msaaFrameBuffer: this.msaaFrameBuffer,
-        });
     }
 
     private currentAntialiasingMode() {

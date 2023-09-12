@@ -1,5 +1,5 @@
 import { Deck2gisLayer } from './deckgl2gisLayer';
-import { initDeck2gisProps } from './utils';
+import { initDeck2gis } from './utils';
 
 if (typeof window !== 'undefined') {
     if ('mapgl' in window) {
@@ -15,4 +15,4 @@ if (typeof window !== 'undefined') {
     }
 }
 
-export { Deck2gisLayer, initDeck2gisProps };
+export { Deck2gisLayer, initDeck2gis };

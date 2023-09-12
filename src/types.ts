@@ -47,7 +47,10 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
 
 export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
 
-export type CustomRenderProps = { antialiasing?: AntiAliasingMode };
+export type CustomRenderProps = {
+    antialiasing?: AntiAliasingMode;
+    skipMapAddRemoveEvents?: boolean;
+};
 
 /**
  * CustomRenderProps is type extends from DeckProps:
