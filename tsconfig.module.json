@@ -1,7 +1,8 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "./dist/types"
+        "outDir": "./dist/types",
+        "types": ["@2gis/gl-matrix"]
     },
     "include": ["index.d.ts", "project.d.ts", "deckgl.d.ts", "src/**/*.ts"],
 }

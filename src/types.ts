@@ -1,7 +1,7 @@
-import type RenderTarget from '2gl/RenderTarget';
-import type Vao from '2gl/Vao';
-import type ShaderProgram from '2gl/ShaderProgram';
-import { DeckProps } from '@deck.gl/core/typed';
+import type { DeckProps } from '@deck.gl/core/typed';
+import { RenderTarget } from './2gl/RenderTarget';
+import { ShaderProgram } from './2gl/ShaderProgram';
+import { Vao } from './2gl/Vao';
 
 export interface DeckCustomLayer {
     type: 'custom';
@@ -43,6 +43,7 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
     _2glVao?: Vao;
     _2gisFramestart?: boolean;
     _antialiasing?: AntiAliasingMode;
+    _2gisInitDeck?: boolean;
 };
 
 export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
