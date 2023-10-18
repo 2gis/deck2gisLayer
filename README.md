@@ -14,7 +14,7 @@ npm install @2gis/deck2gis-layer
 Import the deck2gisLayer plugin to your project and use it:
 
 ```typescript
-import { Deck2gisLayer, initDeck2gisProps } from '@2gis/deck2gis-layer';
+import { Deck2gisLayer, initDeck } from '@2gis/deck2gis-layer';
 // Init mapgl
 const map = new mapgl.Map('container', {
     center: [55.31878, 25.23584],
@@ -22,7 +22,7 @@ const map = new mapgl.Map('container', {
     key: 'Your API access key',
 });
 // Init deck.gl
-const deck = new Deck(initDeck2gisProps(map));
+const deck = initDeck(map, Deck, { antialiasing: 'msaa' });
 
 // create Deck2gisLayer
 const layer = new Deck2gisLayer<HexagonLayer<any>>({

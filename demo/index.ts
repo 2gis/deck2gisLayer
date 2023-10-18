@@ -3,7 +3,7 @@ import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers/typed';
 import { TextLayer } from '@deck.gl/layers';
 import { Color, Deck } from '@deck.gl/core/typed';
 import { data } from './data';
-import { initDeck2gisProps } from '../src/utils';
+import { initDeck } from '../src/utils';
 
 declare const mapgl: any;
 
@@ -15,9 +15,10 @@ const map = new mapgl.Map('container', {
     webglVersion: 2,
 });
 
-const deck = new Deck(initDeck2gisProps(map, { antialiasing: 'none' }));
-map.once('styleload', () => {
-    setTimeout(() => initDeckGL(), 3000);
+let deck;
+map.once('idle', () => {
+    deck = initDeck(map, Deck, { antialiasing: 'msaa' });
+    initDeckGL();
 });
 
 function initDeckGL() {
@@ -29,6 +30,8 @@ function initDeckGL() {
     map.addLayer(deckLayer3);
     const deckLayer4 = createTextlayer(data);
     map.addLayer(deckLayer4);
+    map.removeLayer('deckgl-HexagonLayer');
+    map.addLayer(deckLayer2);
 }
 
 const COLOR_RANGE: Color[] = [

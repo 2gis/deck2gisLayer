@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "types": ["2gl"],
+        "types": ["@2gis/gl-matrix"],
         "target": "es6",
         "module": "es6",
         "moduleResolution": "node",

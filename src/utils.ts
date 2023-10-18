@@ -4,19 +4,24 @@ import type { Map } from '@2gis/mapgl/types';
 
 import { Deck2gisLayer } from './deckgl2gisLayer';
 import { getViewState, MapglMercatorViewport } from './viewport';
-import Vao from '2gl/Vao';
-import Buffer from '2gl/Buffer';
-import ShaderProgram from '2gl/ShaderProgram';
-import RenderTarget from '2gl/RenderTarget';
-import Shader from '2gl/Shader';
-
 import fill_fxaa_fsh from './shaders/fillTextureFXAA.fsh';
 import fill_fxaa_vsh from './shaders/fillTextureFXAA.vsh';
 import fill_fsh from './shaders/fillTexture.fsh';
 import fill_vsh from './shaders/fillTexture.vsh';
 
-import { AntiAliasingMode, CustomRenderInternalProps, CustomRenderProps } from './types';
+import {
+    AntiAliasingMode,
+    CustomRenderInternalProps,
+    CustomRenderProps,
+    DeckRenderProps,
+} from './types';
 import { DeckProps } from '@deck.gl/core/typed';
+import { RenderTarget } from './2gl/RenderTarget';
+import { Texture } from './2gl/Texture';
+import { Vao } from './2gl/Vao';
+import { ShaderProgram } from './2gl/ShaderProgram';
+import { Shader } from './2gl/Shader';
+import { Buffer } from './2gl/Buffer';
 
 /**
  * @hidden
@@ -59,7 +64,7 @@ export function prepareDeckInstance({
         map.on('move', () => onMapMove(deckInstance, map));
     }
 
-    if (deck?.['layerManager']) {
+    if (deck?.['animationLoop']) {
         deckInstance = deck as Deck;
         deckInstance.setProps(deckProps);
     } else {
@@ -105,7 +110,7 @@ export function updateLayer(deck: Deck, _layer: Deck2gisLayer<any>): void {
  * @hidden
  * @internal
  */
-export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void {
+export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): boolean {
     let currentViewport = (deck.props as CustomRenderInternalProps)._2gisData._2gisCurrentViewport;
     if (!currentViewport) {
         // This is the first layer drawn in this render cycle.
@@ -114,8 +119,8 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
         (deck.props as CustomRenderInternalProps)._2gisData._2gisCurrentViewport = currentViewport;
     }
 
-    if (!(deck as any).layerManager) {
-        return;
+    if (!isIncludeLayer(deck, layer)) {
+        return false;
     }
 
     stateBinder(map.getWebGLContext(), layer);
@@ -125,6 +130,24 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): void
         layerFilter: ({ layer: deckLayer }) => layer.id === deckLayer.id,
         clearCanvas: false,
     });
+
+    return true;
+}
+
+/**
+ * @hidden
+ * @internal
+ */
+function isIncludeLayer(deck: Deck, layer: Deck2gisLayer<any>): boolean {
+    if (!(deck as any).layerManager) {
+        return false;
+    }
+
+    if (!(deck as any).layerManager.layers.some((deckLayer) => layer.id === deckLayer.id)) {
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -144,7 +167,7 @@ function getViewport(map: Map): MapglMercatorViewport | undefined {
  * @internal
  */
 function onMapMove(deck: Deck, map: Map): void {
-    if (deck['layerManager']) {
+    if (deck['animationLoop']) {
         deck.setProps({
             viewState: getViewState(map),
         });
@@ -225,11 +248,13 @@ export function onMapResize(
  * @internal
  */
 function updateLayers(deck: Deck): void {
-    if (deck['layerManager']) {
+    if (deck['animationLoop']) {
         const layers: Layer<any>[] = [];
         let layerIndex = 0;
-        const gl = deck.props.gl;
-        gl && stateBinder(gl);
+        const gl = (deck.props as CustomRenderInternalProps)._2gisData._2gisMap.getWebGLContext();
+        if (gl) {
+            stateBinder(gl);
+        }
         (deck.props as CustomRenderInternalProps)._2gisData._2gisCustomLayers.forEach(
             (deckLayer) => {
                 const LayerType = deckLayer.props.type;
@@ -293,7 +318,8 @@ function reInitDeck2gisProps(
         },
         _antialiasing: (deck?.props as CustomRenderProps).antialiasing || 'none',
         _2gisData: {
-            _2gisCustomLayers: new Set(),
+            _2gisCustomLayers:
+                (deck?.props as CustomRenderInternalProps)._2gisData._2gisCustomLayers || new Set(),
             _2gisMap: map,
         },
         views: [new MapView({ id: '2gis' })],
@@ -308,6 +334,86 @@ function reInitDeck2gisProps(
         viewState: getViewState(map),
     });
     return deck2gisProps;
+}
+
+export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck {
+    const deck = new Deck(initDeck2gisProps(map, deckProps));
+    const gl = map.getWebGLContext() as WebGL2RenderingContext | WebGLRenderingContext;
+    const mapSize = map.getSize();
+    const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
+    const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
+    const renderTarget = new RenderTarget({
+        size: [targetTextureWidth, targetTextureHeight],
+        magFilter: Texture.LinearFilter,
+        minFilter: Texture.LinearFilter,
+        wrapS: Texture.ClampToEdgeWrapping,
+        wrapT: Texture.ClampToEdgeWrapping,
+    });
+    renderTarget.bind(gl);
+    renderTarget.unbind(gl);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+    let msaaFrameBuffer;
+
+    if (
+        !(gl instanceof WebGLRenderingContext) &&
+        gl &&
+        deckProps?.antialiasing === 'msaa' &&
+        gl.getContextAttributes()?.antialias === false
+    ) {
+        msaaFrameBuffer = gl.createFramebuffer();
+        const depthRenderBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
+        gl.renderbufferStorageMultisample(
+            gl.RENDERBUFFER,
+            4,
+            gl.DEPTH_COMPONENT16,
+            targetTextureWidth,
+            targetTextureHeight,
+        );
+
+        const colorRenderBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
+
+        gl.renderbufferStorageMultisample(
+            gl.RENDERBUFFER,
+            4,
+            gl.RGBA8,
+            targetTextureWidth,
+            targetTextureHeight,
+        );
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
+
+        gl.framebufferRenderbuffer(
+            gl.FRAMEBUFFER,
+            gl.COLOR_ATTACHMENT0,
+            gl.RENDERBUFFER,
+            colorRenderBuffer,
+        );
+
+        gl.framebufferRenderbuffer(
+            gl.FRAMEBUFFER,
+            gl.DEPTH_ATTACHMENT,
+            gl.RENDERBUFFER,
+            depthRenderBuffer,
+        );
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    const deckReInit = prepareDeckInstance({
+        map,
+        gl,
+        deck,
+        renderTarget: renderTarget,
+        msaaFrameBuffer: msaaFrameBuffer,
+    });
+    map.triggerRerender();
+    (deckReInit?.props as CustomRenderInternalProps)._2gisInitDeck = true;
+
+    return deckReInit as Deck;
 }
 
 /**
@@ -333,6 +439,7 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
             _2gisMap: map,
         },
         _antialiasing: deckProps?.antialiasing || 'none',
+        //   _framebuffer: ((new RenderTarget({ size: [1, 1] })).bind(gl).unbind(gl) as any)._frameBuffer,
         views: [new MapView({ id: '2gis' })],
     };
     // deck is using the WebGLContext created by 2gis
@@ -362,6 +469,7 @@ function stateBinder(
     gl.clearDepth(1);
     gl.clear(gl.DEPTH_BUFFER_BIT);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 }
 
 /**
@@ -370,6 +478,7 @@ function stateBinder(
  */
 export function createVao(program: ShaderProgram) {
     const screenVertices = [-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1];
+
     return new Vao(program, {
         a_vec2_position: new Buffer(new Int8Array(screenVertices), {
             itemSize: 2,
