@@ -41,8 +41,9 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     isDestroyed: boolean;
 
     /**
-     * Initializes deck.gl properties for working with the MapGL map.
+     * Initializes deck.gl instance for working with the MapGL map.
      * @param map The map instance.
+     * @param Deck The Deck.gl class
      * @param deckProps CustomRenderProps initialization options.
      */
     static initDeck = (map: Map, Deck: any, deckProps?: CustomRenderProps) =>
@@ -52,7 +53,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     /**
      * Example:
      * ```js
-     * const deckLayer = new mapgl.Deck2gisLayer(map, {
+     * const deckLayer = new mapgl.Deck2gisLayer(map, Deck, {
      *     id: 'deckLayer',
      *     deck,
      *     type: HexagonLayer,
