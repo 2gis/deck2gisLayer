@@ -155,12 +155,14 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         ) {
             return;
         }
+        (this.props.deck as any).glStateStore.useDeckWebglState();
 
         const mapSize = (
             this.props.deck.props as CustomRenderInternalProps
         )._2gisData._2gisMap.getSize();
         const { _2gisData } = this.props.deck.props as CustomRenderInternalProps;
         const gl = this.gl;
+        const clearColor = (this.props as any)?.parameters?.clearColor || [1, 1, 1];
 
         if (_2gisData._2gisFramestart) {
             if (this.props.deck.width !== mapSize[0] || this.props.deck.height !== mapSize[1]) {
@@ -177,7 +179,8 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             msaaFrameBuffer
                 ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer)
                 : renderTarget.bind(gl);
-            gl.clearColor(1, 1, 1, 0);
+            gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 0);
+            gl.clearDepth(1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             _2gisData._2gisCurrentViewport = undefined;
@@ -186,7 +189,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             msaaFrameBuffer
                 ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer)
                 : renderTarget.bind(gl);
-            gl.clearColor(1, 1, 1, 0);
+            gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
@@ -198,13 +201,16 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             this,
         );
         if (!isDrawed) {
+            (this.props.deck as any).glStateStore.useMapglWebglState();
             return;
         }
+
         if (msaaFrameBuffer) {
             this.blitMsaaFrameBuffer();
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
         const texture = renderTarget.getTexture();
         texture.enable(gl, 0);
         program.enable(gl);
@@ -212,6 +218,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
         this.programmBinder();
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
+        (this.props.deck as any).glStateStore.useMapglWebglState();
     };
 
     private programmBinder() {
