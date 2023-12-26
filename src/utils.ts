@@ -198,14 +198,14 @@ export function onMapResize(
         : (deck.props._framebuffer = (renderTarget as any)._frameBuffer);
     renderTarget.unbind(gl);
 
-    if (msaaFrameBuffer) {
+    if (msaaFrameBuffer  && !(gl instanceof WebGLRenderingContext)) {
         const depthRenderBuffer = gl.createRenderbuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
-        (gl as WebGL2RenderingContext).renderbufferStorageMultisample(
+        gl.renderbufferStorageMultisample(
             gl.RENDERBUFFER,
             4,
-            (gl as WebGL2RenderingContext).DEPTH_COMPONENT24,
+            gl.DEPTH_COMPONENT24,
             targetTextureWidth,
             targetTextureHeight,
         );
@@ -213,10 +213,10 @@ export function onMapResize(
         const colorRenderBuffer = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
 
-        (gl as WebGL2RenderingContext).renderbufferStorageMultisample(
+        gl.renderbufferStorageMultisample(
             gl.RENDERBUFFER,
             4,
-            (gl as WebGL2RenderingContext).RGBA8,
+            gl.RGBA8,
             targetTextureWidth,
             targetTextureHeight,
         );
@@ -366,7 +366,7 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
     // init Deck render frameBuffers and renderTarget with deck webGl state.
     deck.glStateStore.useDeckWebglState();
 
-    const gl = map.getWebGLContext() as WebGL2RenderingContext | WebGLRenderingContext;
+    const gl = map.getWebGLContext();
     const mapSize = map.getSize();
     const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
     const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);

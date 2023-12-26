@@ -22,7 +22,7 @@
     "dist/*"
   ],
   "devDependencies": {
-    "@2gis/mapgl": "1.32.1",
+    "@2gis/mapgl": "1.42.0",
     "@deck.gl/aggregation-layers": "8.8.17",
     "@deck.gl/layers": "8.8.17",
     "@documentalist/compiler": "^5.0.0",
