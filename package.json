@@ -1,6 +1,6 @@
 {
   "name": "@2gis/deck2gis-layer",
-  "version": "2.0.0",
+  "version": "2.0.5",
   "description": "",
   "main": "dist/deck2gislayer.js",
   "typings": "dist/types/index.d.ts",
@@ -22,10 +22,10 @@
     "dist/*"
   ],
   "devDependencies": {
-    "@2gis/mapgl": "1.32.1",
+    "@2gis/mapgl": "1.42.0",
     "@deck.gl/aggregation-layers": "8.8.17",
     "@deck.gl/layers": "8.8.17",
-    "@documentalist/compiler": "^2.8.1",
+    "@documentalist/compiler": "^5.0.0",
     "fork-ts-checker-webpack-plugin": "^4.1.4",
     "prettier": "^2.0.5",
     "ts-loader": "8.4.0",
@@ -38,8 +38,11 @@
     "wellknown": "^0.5.0"
   },
   "dependencies": {
+    "@2gis/gl-matrix": "^2.4.6",
     "@deck.gl/core": "8.8.17",
-    "@2gis/gl-matrix": "^2.4.6"
+    "gl-state": "^1.0.0",
+    "node": "^16.20.2",
+    "uniq": "^1.0.1"
   },
   "optionalDependencies": {
     "fsevents": "^2.3.2"

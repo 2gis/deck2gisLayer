@@ -22,6 +22,7 @@ import { Vao } from './2gl/Vao';
 import { ShaderProgram } from './2gl/ShaderProgram';
 import { Shader } from './2gl/Shader';
 import { Buffer } from './2gl/Buffer';
+import * as createStateStack from 'gl-state';
 
 /**
  * @hidden
@@ -122,15 +123,13 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): bool
     if (!isIncludeLayer(deck, layer)) {
         return false;
     }
-
-    stateBinder(map.getWebGLContext(), layer);
+    stateBinder(map.getWebGLContext());
 
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
         layerFilter: ({ layer: deckLayer }) => layer.id === deckLayer.id,
         clearCanvas: false,
     });
-
     return true;
 }
 
@@ -152,9 +151,8 @@ function isIncludeLayer(deck: Deck, layer: Deck2gisLayer<any>): boolean {
 
 /**
  * @hidden
- * @internal
  */
-function getViewport(map: Map): MapglMercatorViewport | undefined {
+export function getViewport(map: Map): MapglMercatorViewport | undefined {
     if (!map) {
         return undefined;
     }
@@ -200,14 +198,14 @@ export function onMapResize(
         : (deck.props._framebuffer = (renderTarget as any)._frameBuffer);
     renderTarget.unbind(gl);
 
-    if (msaaFrameBuffer) {
+    if (msaaFrameBuffer  && !(gl instanceof WebGLRenderingContext)) {
         const depthRenderBuffer = gl.createRenderbuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
-        (gl as WebGL2RenderingContext).renderbufferStorageMultisample(
+        gl.renderbufferStorageMultisample(
             gl.RENDERBUFFER,
             4,
-            gl.DEPTH_COMPONENT16,
+            gl.DEPTH_COMPONENT24,
             targetTextureWidth,
             targetTextureHeight,
         );
@@ -215,10 +213,10 @@ export function onMapResize(
         const colorRenderBuffer = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
 
-        (gl as WebGL2RenderingContext).renderbufferStorageMultisample(
+        gl.renderbufferStorageMultisample(
             gl.RENDERBUFFER,
             4,
-            (gl as WebGL2RenderingContext).RGBA8,
+            gl.RGBA8,
             targetTextureWidth,
             targetTextureHeight,
         );
@@ -241,6 +239,8 @@ export function onMapResize(
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
+
+    (deck as any).glStateStore = initWebglStateStores(map);
 }
 
 /**
@@ -251,10 +251,7 @@ function updateLayers(deck: Deck): void {
     if (deck['animationLoop']) {
         const layers: Layer<any>[] = [];
         let layerIndex = 0;
-        const gl = (deck.props as CustomRenderInternalProps)._2gisData._2gisMap.getWebGLContext();
-        if (gl) {
-            stateBinder(gl);
-        }
+        (deck as any).glStateStore.useDeckWebglState();
         (deck.props as CustomRenderInternalProps)._2gisData._2gisCustomLayers.forEach(
             (deckLayer) => {
                 const LayerType = deckLayer.props.type;
@@ -263,6 +260,7 @@ function updateLayers(deck: Deck): void {
             },
         );
         deck.setProps({ layers });
+        (deck as any).glStateStore.useMapglWebglState();
     }
 }
 
@@ -336,9 +334,39 @@ function reInitDeck2gisProps(
     return deck2gisProps;
 }
 
+function initWebglStateStores(map: Map) {
+    const useDeckStorei = (gl) => {
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.disable(gl.CULL_FACE);
+    };
+    const mapglState = createStateStack(map.getWebGLContext());
+    const deckGlState = createStateStack(map.getWebGLContext());
+    const gl = map.getWebGLContext();
+    const useDeckWebglState = () => {
+        mapglState.push();
+        deckGlState.pop();
+        useDeckStorei(gl);
+    };
+    const useMapglWebglState = () => {
+        deckGlState.push();
+        mapglState.pop();
+        useDeckStorei(gl);
+    };
+    mapglState.push();
+    useDeckStorei(gl);
+    deckGlState.push();
+    return { useDeckWebglState, useMapglWebglState, mapglState, deckGlState };
+}
+
 export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck {
     const deck = new Deck(initDeck2gisProps(map, deckProps));
-    const gl = map.getWebGLContext() as WebGL2RenderingContext | WebGLRenderingContext;
+    deck.glStateStore = initWebglStateStores(map);
+
+    // init Deck render frameBuffers and renderTarget with deck webGl state.
+    deck.glStateStore.useDeckWebglState();
+
+    const gl = map.getWebGLContext();
     const mapSize = map.getSize();
     const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
     const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
@@ -351,9 +379,6 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
     });
     renderTarget.bind(gl);
     renderTarget.unbind(gl);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-
     let msaaFrameBuffer;
 
     if (
@@ -368,7 +393,7 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
         gl.renderbufferStorageMultisample(
             gl.RENDERBUFFER,
             4,
-            gl.DEPTH_COMPONENT16,
+            gl.DEPTH_COMPONENT24,
             targetTextureWidth,
             targetTextureHeight,
         );
@@ -412,6 +437,9 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
     });
     map.triggerRerender();
     (deckReInit?.props as CustomRenderInternalProps)._2gisInitDeck = true;
+
+    // reset webGl state to mapgl.
+    deck.glStateStore.useMapglWebglState();
 
     return deckReInit as Deck;
 }
@@ -459,17 +487,9 @@ export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): Deck
  * @hidden
  * @internal
  */
-function stateBinder(
-    gl: WebGLRenderingContext | WebGL2RenderingContext,
-    layer?: Deck2gisLayer<any>,
-) {
-    if (!layer?.props?.parameters?.cullFaceEnabled) {
-        gl.disable(gl.CULL_FACE);
-    }
+function stateBinder(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     gl.clearDepth(1);
     gl.clear(gl.DEPTH_BUFFER_BIT);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 }
 
 /**
