@@ -1,6 +1,6 @@
 {
   "name": "@2gis/deck2gis-layer",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "",
   "main": "dist/deck2gislayer.js",
   "typings": "dist/types/index.d.ts",
@@ -41,7 +41,6 @@
     "@2gis/gl-matrix": "^2.4.6",
     "@deck.gl/core": "8.8.17",
     "gl-state": "^1.0.0",
-    "node": "^16.20.2",
     "uniq": "^1.0.1"
   },
   "optionalDependencies": {
