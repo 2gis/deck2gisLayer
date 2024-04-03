@@ -49,7 +49,7 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
 /**
  * AntiAliasing mode:
  * fxaa - Fast approximate anti-aliasing
- * msaa - Multisample Anti-Aliasing (only work with webgl2)
+ * msaa - Multisample Anti-Aliasing (only works with webgl2)
  * none - Disable anti-aliasing
  */
 export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
