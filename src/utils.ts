@@ -264,6 +264,12 @@ function updateLayers(deck: Deck): void {
     }
 }
 
+/**
+ * Internally initializes deck.gl properties for working with the MapGL map.
+ * @param map The map instance.
+ * @param deck The Deck.gl instance.
+ * @param renderTarget 2gl RenderTarget.
+ */
 function reInitDeck2gisProps(
     map: Map,
     renderTarget: RenderTarget,
@@ -442,6 +448,11 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
     return deckReInit as Deck;
 }
 
+/**
+ * Initializes deck.gl properties for working with the MapGL map.
+ * @param map The map instance.
+ * @param deckProps CustomRenderProps initialization options.
+ */
 function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {
