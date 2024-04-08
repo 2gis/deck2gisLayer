@@ -198,7 +198,7 @@ export function onMapResize(
         : (deck.props._framebuffer = (renderTarget as any)._frameBuffer);
     renderTarget.unbind(gl);
 
-    if (msaaFrameBuffer  && !(gl instanceof WebGLRenderingContext)) {
+    if (msaaFrameBuffer && !(gl instanceof WebGLRenderingContext)) {
         const depthRenderBuffer = gl.createRenderbuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
         gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
@@ -269,8 +269,6 @@ function updateLayers(deck: Deck): void {
  * @param map The map instance.
  * @param deck The Deck.gl instance.
  * @param renderTarget 2gl RenderTarget.
- * @hidden
- * @internal
  */
 function reInitDeck2gisProps(
     map: Map,
@@ -359,6 +357,12 @@ function initWebglStateStores(map: Map) {
     return { useDeckWebglState, useMapglWebglState, mapglState, deckGlState };
 }
 
+/**
+ * Initializes deck.gl instance for working with the MapGL map.
+ * @param map The map instance.
+ * @param Deck The Deck.gl
+ * @param deckProps DeckRenderProps initialization options.
+ */
 export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck {
     const deck = new Deck(initDeck2gisProps(map, deckProps));
     deck.glStateStore = initWebglStateStores(map);
@@ -449,7 +453,7 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
  * @param map The map instance.
  * @param deckProps CustomRenderProps initialization options.
  */
-export function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
+function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {
         ...deckProps,

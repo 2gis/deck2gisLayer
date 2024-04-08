@@ -46,6 +46,12 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
     _2gisInitDeck?: boolean;
 };
 
+/**
+ * AntiAliasing mode:
+ * fxaa - Fast approximate anti-aliasing
+ * msaa - Multisample Anti-Aliasing (only works with webgl2)
+ * none - Disable anti-aliasing
+ */
 export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
 
 export type CustomRenderProps = { antialiasing?: AntiAliasingMode };
