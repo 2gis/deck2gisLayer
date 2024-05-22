@@ -1,6 +1,6 @@
 import 'jest'; // Подключаем типы jest
 import * as puppeteer from 'puppeteer';
-import {PAGE_HEIGHT, PAGE_WIDTH, WAIT_FOR_TIMEOUT, REFERENCE_DEMO} from './config';
+import { PAGE_HEIGHT, PAGE_WIDTH, WAIT_FOR_TIMEOUT, REFERENCE_DEMO } from './config';
 
 interface LaunchOptions extends puppeteer.LaunchOptions {
     defaultViewport: {

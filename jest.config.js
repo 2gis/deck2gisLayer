@@ -9,7 +9,7 @@ const suiteParams = {
         testTimeout: 50000,
         testEnvironment: 'node',
         testMatch: ['**/test/screenshots/**/*.ts'],
-    }
+    },
 };
 
 module.exports = {

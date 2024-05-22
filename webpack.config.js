@@ -1,6 +1,6 @@
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const path = require('path');
-const {CleanWebpackPlugin} = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = (_, argv) => {
@@ -80,16 +80,14 @@ module.exports = (_, argv) => {
         },
         plugins: [
             new CleanWebpackPlugin(),
-            new CopyPlugin(
-                [
-                    {
-                        from: 'test/index.html',
-                        to: 'test.html',
-                    },
-                ],
-            ),
+            new CopyPlugin([
+                {
+                    from: 'test/index.html',
+                    to: 'test.html',
+                },
+            ]),
         ],
-    }
+    };
 
     if (type === 'production') {
         return [library];
@@ -131,7 +129,7 @@ module.exports = (_, argv) => {
     };
 
     return [
-        {...library, ...devConfig},
-        {...demo, ...devConfig},
+        { ...library, ...devConfig },
+        { ...demo, ...devConfig },
     ];
 };

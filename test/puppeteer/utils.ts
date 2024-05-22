@@ -1,17 +1,16 @@
 // <reference path="../../node_modules/@2gis/mapgl/global.d.ts" />
 
-import {API_KEY, MAP_CENTER, MAP_ZOOM} from './config';
-import {Page as PuppeteerPage} from 'puppeteer';
-import {MatchImageSnapshotOptions} from 'jest-image-snapshot';
+import { API_KEY, MAP_CENTER, MAP_ZOOM } from './config';
+import { Page as PuppeteerPage } from 'puppeteer';
+import { MatchImageSnapshotOptions } from 'jest-image-snapshot';
 
-const {configureToMatchImageSnapshot} = require('jest-image-snapshot');
+const { configureToMatchImageSnapshot } = require('jest-image-snapshot');
 
 export const defaultFontsPath = 'https://mapgl.2gis.com/api/fonts';
 export const defaultIconsPath = 'https://disk.2gis.com/styles/assets/icons';
 
-
 const toMatchImageSnapshot = configureToMatchImageSnapshot();
-expect.extend({toMatchImageSnapshot});
+expect.extend({ toMatchImageSnapshot });
 declare global {
     namespace jest {
         interface Matchers<R> {
@@ -80,7 +79,7 @@ export async function makeSnapshot(
     name: string,
     matchOptions?: MatchImageSnapshotOptions,
 ) {
-    const image: string | Buffer = await page.screenshot({encoding: 'binary'});
+    const image: string | Buffer = await page.screenshot({ encoding: 'binary' });
     expect(image).toMatchImageSnapshot({
         customSnapshotsDir: dirPath,
         customSnapshotIdentifier: name,
