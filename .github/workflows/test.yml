@@ -1,0 +1,24 @@
+name: Test deck2gisLayer plugin
+
+on:
+    push:
+        branches:
+            - '*'
+        tags-ignore:
+            - '*'
+
+jobs:
+    run-tests:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 16
+            - run: npm ci
+            - run: npm run test:screenshots
+            - uses: actions/upload-artifact@v3
+              if: ${{ failure() }}
+              with:
+                  path: test/screenshots/__screenshots__/**/__diff_output__/*.png
+                  retention-days: 5

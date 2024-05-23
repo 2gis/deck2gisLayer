@@ -1,5 +1,7 @@
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = (_, argv) => {
     let type = 'development';
@@ -8,6 +10,8 @@ module.exports = (_, argv) => {
         type = 'production';
     } else if (argv.demo) {
         type = 'demo';
+    } else if (argv.test) {
+        type = 'test';
     }
 
     const base = {
@@ -66,12 +70,35 @@ module.exports = (_, argv) => {
         },
     };
 
+    const test = {
+        ...base,
+        entry: './test/index.ts',
+        output: {
+            filename: 'test.js',
+            path: path.resolve(__dirname, 'dist'),
+            publicPath: '/',
+        },
+        plugins: [
+            new CleanWebpackPlugin(),
+            new CopyPlugin([
+                {
+                    from: 'test/index.html',
+                    to: 'test.html',
+                },
+            ]),
+        ],
+    };
+
     if (type === 'production') {
         return [library];
     }
 
     if (type === 'demo') {
         return [library, demo];
+    }
+
+    if (type === 'test') {
+        return [test];
     }
 
     const devConfig = {
