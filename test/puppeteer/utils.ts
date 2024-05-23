@@ -89,7 +89,6 @@ export async function makeSnapshot(
     });
 }
 
-export async function waitForReadiness(page: PuppeteerPage) {
-    await page.waitForFunction(() => window.ready);
-    await page.evaluate(() => (window.ready = false));
+export async function waitForMapReady(page: PuppeteerPage) {
+    await page.waitForFunction(() => window.map.isIdle())
 }

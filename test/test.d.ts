@@ -8,6 +8,8 @@ declare global {
         deck2gisLayer: Deck2gisLayer;
         Deck2gisLayer: typeof Deck2gisLayer;
         initDeck: initDeck;
+        deckgl: any;
+        sdk: any;
         Deck: any;
         HexagonLayer: any;
         ready: boolean;
