@@ -90,5 +90,5 @@ export async function makeSnapshot(
 }
 
 export async function waitForMapReady(page: PuppeteerPage) {
-    await page.waitForFunction(() => window.map.isIdle())
+    await page.waitForFunction(() => window.map.isIdle());
 }

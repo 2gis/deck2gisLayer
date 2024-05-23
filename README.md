@@ -46,7 +46,7 @@ Deck2gisLayer uses github-flow to accept & merge fixes and improvements. Basic p
 - Fork the repo.
 - Create a branch.
 - Add or fix some code.
-- **Run testing suite with `npm run docker:test` and make sure nothing is broken**
+- **Run testing suite with `npm run test:screenshots` and make sure nothing is broken**
 - Add some tests for your new code or fix broken tests.
 - Commit & push.
 - Create a new pull request to original repo.
@@ -58,12 +58,7 @@ Also, if you modify packages or add them to `package.json`, make sure you use `n
 
 ### Run tests
 ```shell
-npm run docker:test
-```
-
-### Update screenshots
-```shell
-npm run docker:screenshot:update
+npm run test:screenshots
 ```
 
 ## Release

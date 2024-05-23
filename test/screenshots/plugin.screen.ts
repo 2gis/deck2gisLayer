@@ -1,5 +1,5 @@
-import {pageSetUp, Page} from '../puppeteer';
-import {API_KEY, DEFAULT_STYLE} from '../puppeteer/config';
+import { pageSetUp, Page } from '../puppeteer';
+import { API_KEY, DEFAULT_STYLE } from '../puppeteer/config';
 import {
     makeScreenshotsPath,
     makeSnapshot,
@@ -7,8 +7,8 @@ import {
     defaultFontsPath,
     waitForMapReady,
 } from '../puppeteer/utils';
-import {HexagonLayer} from "@deck.gl/aggregation-layers/typed";
-import * as puppeteer from "puppeteer";
+import { HexagonLayer } from '@deck.gl/aggregation-layers/typed';
+import * as puppeteer from 'puppeteer';
 
 describe('Base tests', () => {
     let page: Page;
@@ -29,8 +29,8 @@ describe('Base tests', () => {
         });
         await waitForMapReady(page);
         await page.evaluate(() => {
-            window.deckgl = window.initDeck(window.map, window.Deck, {antialiasing: 'msaa'});
-        })
+            window.deckgl = window.initDeck(window.map, window.Deck, { antialiasing: 'msaa' });
+        });
     });
     afterEach(async () => {
         await page.close();
@@ -87,8 +87,8 @@ describe('Base tests', () => {
         await addHexagonLayer(page);
         await waitForMapReady(page);
         await page.evaluate(() => {
-            window.map.removeLayer('deckgl-HexagonLayer')
-        })
+            window.map.removeLayer('deckgl-HexagonLayer');
+        });
         await waitForMapReady(page);
         await makeSnapshot(page, dirPath, 'add_and_delete_hexagon');
     });
@@ -96,9 +96,9 @@ describe('Base tests', () => {
     it('resize viewport', async () => {
         await addHexagonLayer(page);
         await waitForMapReady(page);
-        await page.setViewport({width: 200, height: 200})
+        await page.setViewport({ width: 200, height: 200 });
         await page.evaluate(() => {
-            window.map.invalidateSize()
+            window.map.invalidateSize();
         });
         await waitForMapReady(page);
         await makeSnapshot(page, dirPath, 'resize_viewport');
