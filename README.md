@@ -9,6 +9,10 @@ Install with NPM
 npm install @2gis/deck2gis-layer
 ```
 
+> **Important**
+>
+> The current version of the `Deck2gisLayer` plugin is only compatible with the `deck.gl@^8`
+
 ### Use # deck2gisLayer
 
 Import the deck2gisLayer plugin to your project and use it:
