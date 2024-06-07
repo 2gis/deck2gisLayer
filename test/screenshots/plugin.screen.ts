@@ -24,10 +24,15 @@ describe('Base tests', () => {
             copyright: false,
             zoomControl: false,
             key: API_KEY,
-            zoom: 12.5,
-            center: [55.296872, 25.261885],
+            zoom: 12.2,
+            center: [59.296872, 24.261885],
         });
         await waitForMapReady(page);
+        await page.evaluate(() => {
+            window.polyline = new window.Polyline(window.map, {
+                coordinates: [[59, 24], [59.296872, 24.261885]],
+            });
+        })
         await page.evaluate(() => {
             window.deckgl = window.initDeck(window.map, window.Deck, { antialiasing: 'msaa' });
         });
@@ -41,26 +46,38 @@ describe('Base tests', () => {
             const data = [
                 {
                     point: {
-                        lon: 55.296872,
-                        lat: 25.261885,
+                        lon: 59.296872,
+                        lat: 24.261885,
                     },
                 },
                 {
                     point: {
-                        lon: 55.296644,
-                        lat: 25.262364,
+                        lon: 59.296644,
+                        lat: 24.262364,
                     },
                 },
                 {
                     point: {
-                        lon: 55.299031,
-                        lat: 25.254415,
+                        lon: 59.299031,
+                        lat: 24.254415,
                     },
                 },
                 {
                     point: {
-                        lon: 55.299031,
-                        lat: 25.254415,
+                        lon: 59.299031,
+                        lat: 24.254415,
+                    },
+                },
+                {
+                    point: {
+                        lon: 59.299030,
+                        lat: 24.254414,
+                    },
+                },
+                {
+                    point: {
+                        lon: 59.299030,
+                        lat: 24.254413,
                     },
                 },
             ];

@@ -6,3 +6,4 @@ window.Deck2gisLayer = Deck2gisLayer;
 window.initDeck = initDeck;
 window.Deck = Deck;
 window.HexagonLayer = HexagonLayer;
+window.Polyline = mapgl.Polyline;
