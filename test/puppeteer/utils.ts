@@ -92,3 +92,13 @@ export async function makeSnapshot(
 export async function waitForMapReady(page: PuppeteerPage) {
     await page.waitForFunction(() => window.map.isIdle());
 }
+
+export const emptyStyle = {
+    version: 1,
+    name: '',
+    background: {
+        color: '#f5f2e0',
+    },
+    layers: [],
+    icons: {},
+};

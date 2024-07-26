@@ -1,11 +1,12 @@
 import { pageSetUp, Page } from '../puppeteer';
-import { API_KEY, DEFAULT_STYLE } from '../puppeteer/config';
+import { API_KEY } from '../puppeteer/config';
 import {
     makeScreenshotsPath,
     makeSnapshot,
     initMapWithOptions,
     defaultFontsPath,
     waitForMapReady,
+    emptyStyle,
 } from '../puppeteer/utils';
 import { HexagonLayer } from '@deck.gl/aggregation-layers/typed';
 import * as puppeteer from 'puppeteer';
@@ -16,7 +17,8 @@ describe('Base tests', () => {
     beforeEach(async () => {
         page = await pageSetUp();
         await initMapWithOptions(page, {
-            style: DEFAULT_STYLE,
+            //@ts-ignore
+            style: emptyStyle,
             styleOptions: {
                 fontsPath: defaultFontsPath,
             },
@@ -30,9 +32,12 @@ describe('Base tests', () => {
         await waitForMapReady(page);
         await page.evaluate(() => {
             window.polyline = new window.Polyline(window.map, {
-                coordinates: [[59, 24], [59.296872, 24.261885]],
+                coordinates: [
+                    [59, 24],
+                    [59.296872, 24.261885],
+                ],
             });
-        })
+        });
         await page.evaluate(() => {
             window.deckgl = window.initDeck(window.map, window.Deck, { antialiasing: 'msaa' });
         });
@@ -70,13 +75,13 @@ describe('Base tests', () => {
                 },
                 {
                     point: {
-                        lon: 59.299030,
+                        lon: 59.29903,
                         lat: 24.254414,
                     },
                 },
                 {
                     point: {
-                        lon: 59.299030,
+                        lon: 59.29903,
                         lat: 24.254413,
                     },
                 },
