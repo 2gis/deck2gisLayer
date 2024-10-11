@@ -218,9 +218,10 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
 
         this.programmBinder();
 
+        const prevDepthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
         gl.depthMask(false);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-        gl.depthMask(true);
+        gl.depthMask(prevDepthMask);
 
         (this.props.deck as any).glStateStore.useMapglWebglState();
     };
