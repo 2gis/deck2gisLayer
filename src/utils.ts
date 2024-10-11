@@ -123,7 +123,6 @@ export function drawLayer(deck: Deck, map: Map, layer: Deck2gisLayer<any>): bool
     if (!isIncludeLayer(deck, layer)) {
         return false;
     }
-    stateBinder(map.getWebGLContext());
 
     deck._drawLayers('2gis-repaint', {
         viewports: [currentViewport],
@@ -484,16 +483,6 @@ function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
         viewState: getViewState(map),
     });
     return deck2gisProps;
-}
-
-// Fix heatmap layer render: need reset gl state after each draw layers
-/**
- * @hidden
- * @internal
- */
-function stateBinder(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    gl.clearDepth(1);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
 }
 
 /**

@@ -21,6 +21,23 @@ map.once('idle', () => {
     initDeckGL();
 });
 
+const buildingLayer = {
+    id: 'house private',
+    name: 'Частные дома',
+    type: 'polygonExtrusion',
+    style: {
+        topColor: '#00ff00',
+        sideColor: 'rgba(255,62,54,0.82)',
+    },
+    filter: ['match', ['get', 'sublayer'], ['Technical_house'], true, false],
+    minzoom: 16,
+    metadata: {
+        group: {
+            id: '746776',
+        },
+    },
+};
+
 function initDeckGL() {
     const deckLayer1 = createHeatmapLayer(data);
     map.addLayer(deckLayer1);
@@ -32,6 +49,7 @@ function initDeckGL() {
     map.addLayer(deckLayer4);
     map.removeLayer('deckgl-HexagonLayer');
     map.addLayer(deckLayer2);
+    map.addLayer(buildingLayer);
 }
 
 const COLOR_RANGE: Color[] = [
