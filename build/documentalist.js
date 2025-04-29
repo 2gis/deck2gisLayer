@@ -1,15 +1,24 @@
-const { Documentalist, TypescriptPlugin } = require('@documentalist/compiler');
-const { mkdirSync, writeFileSync } = require('fs');
+const { generateDocs } = require('@2gis/js-docs-generator');
+const fs = require('fs');
+const path = require('path');
 
-mkdirSync('dist', {
-    recursive: true,
-});
+const version = process.env.VERSION || 'branch';
+fs.mkdirSync(path.join('dist', 'docs', version), { recursive: true });
 
-new Documentalist()
-    .use(/\.ts$/, new TypescriptPlugin())
-    .documentGlobs('src/*')
-    .then((docs) => JSON.stringify(docs))
-    .then((json) => writeFileSync('dist/docs.json', json))
+generateDocs({
+    version,
+    defaultReference: 'Deck2gisLayer',
+    docsHost: 'https://unpkg.com/@2gis/deck2gis-layer@^2/dist/docs',
+    excludePaths: [],
+    globs: ['src/**/*'],
+    ignoreMarkdown: true,
+    legacyOutPath: 'dist/docs.json',
+})
+    .then((result) => {
+        fs.writeFileSync(path.join('dist', 'docs', 'manifest.json'), result.manifest);
+        fs.writeFileSync(path.join('dist', 'docs', version, 'en.json'), result.reference.en);
+        fs.writeFileSync(path.join('dist', 'docs', version, 'ru.json'), result.reference.ru);
+    })
     .catch((e) => {
         console.log(e);
         process.exit(1);
