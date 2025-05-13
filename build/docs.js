@@ -1,4 +1,4 @@
-const { generateDocs } = require('@2gis/js-docs-generator');
+const { generateDocs } = require('@2gis/ts-docs-generator');
 const fs = require('fs');
 const path = require('path');
 
@@ -7,6 +7,7 @@ fs.mkdirSync(path.join('dist', 'docs', version), { recursive: true });
 
 generateDocs({
     version,
+    project: 'deck2gisLayer',
     defaultReference: 'Deck2gisLayer',
     docsHost: 'https://unpkg.com/@2gis/deck2gis-layer@^2/dist/docs',
     excludePaths: [],

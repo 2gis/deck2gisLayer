@@ -11,7 +11,7 @@
     "build:js-prod": "NODE_OPTIONS=--openssl-legacy-provider webpack --production",
     "build:js-demo": "NODE_OPTIONS=--openssl-legacy-provider webpack --demo",
     "build:typings": "tsc -p tsconfig.module.json --declaration --emitDeclarationOnly",
-    "build:docs": "node build/documentalist",
+    "build:docs": "node build/docs",
     "dev": "npm run build:assets && webpack-dev-server",
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css,md}\"",
     "prettier:write": "prettier --write \"./**/*.{ts,tsx,js,json,html,css,md}\"",
@@ -26,7 +26,7 @@
     "dist/*"
   ],
   "devDependencies": {
-    "@2gis/js-docs-generator": "^0.0.3",
+    "@2gis/ts-docs-generator": "^0.0.2",
     "@2gis/mapgl": "1.42.0",
     "@deck.gl/aggregation-layers": "8.8.17",
     "@deck.gl/layers": "8.8.17",
