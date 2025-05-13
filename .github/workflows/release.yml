@@ -20,5 +20,5 @@ jobs:
       - run: npm run build
       - run: npm publish --access public
         env:
-          VERSION: ${{ env.TAG }}
+          VERSION: $GITHUB_REF_NAME
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
