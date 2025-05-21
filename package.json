@@ -38,7 +38,7 @@
     "fork-ts-checker-webpack-plugin": "^4.1.4",
     "http-server": "^14.1.1",
     "jest": "^27.5.1",
-    "jest-dev-server": "^6.0.3",
+    "jest-dev-server": "^11.0.0",
     "jest-image-snapshot": "^4.5.1",
     "prettier": "^2.8.8",
     "puppeteer": "^13.3.2",
