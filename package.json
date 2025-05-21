@@ -26,7 +26,7 @@
     "dist/*"
   ],
   "devDependencies": {
-    "@2gis/ts-docs-generator": "^0.0.2",
+    "@2gis/ts-docs-generator": "^0.1.0",
     "@2gis/mapgl": "1.42.0",
     "@deck.gl/aggregation-layers": "8.8.17",
     "@deck.gl/layers": "8.8.17",
