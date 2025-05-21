@@ -16,10 +16,10 @@
     "prettier": "prettier --check \"./**/*.{ts,tsx,js,json,html,css,md}\"",
     "prettier:write": "prettier --write \"./**/*.{ts,tsx,js,json,html,css,md}\"",
     "lint": "tslint -p tsconfig.json 'src/**/*.ts' 'demo/**/*.ts'",
-    "test:screenshots": "webpack --test && TEST_SUITE=screenshots jest --forceExit --projects test/screenshots --colors",
-    "test:screenshots:update": "webpack --test && TEST_SUITE=screenshots jest --forceExit --projects test/screenshots --colors -u",
-    "test:screenshots:watch": "webpack --test && TEST_SUITE=screenshots jest --forceExit --watchAll --projects test/screenshots --colors",
-    "test:screenshots:no-headless": "webpack --test && NO_HEADLESS=true TEST_SUITE=screenshots jest --forceExit --projects test/screenshots --colors"
+    "test:screenshots": "NODE_OPTIONS=--openssl-legacy-provider webpack --test && TEST_SUITE=screenshots jest --forceExit --projects test/screenshots --colors",
+    "test:screenshots:update": "NODE_OPTIONS=--openssl-legacy-provider webpack --test && TEST_SUITE=screenshots jest --forceExit --projects test/screenshots --colors -u",
+    "test:screenshots:watch": "NODE_OPTIONS=--openssl-legacy-provider webpack --test && TEST_SUITE=screenshots jest --forceExit --watchAll --projects test/screenshots --colors",
+    "test:screenshots:no-headless": "NODE_OPTIONS=--openssl-legacy-provider webpack --test && NO_HEADLESS=true TEST_SUITE=screenshots jest --forceExit --projects test/screenshots --colors"
   },
   "license": "BSD-2-Clause",
   "files": [
