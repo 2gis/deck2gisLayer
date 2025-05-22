@@ -17,7 +17,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm ci
       - run: npm run build
+        env:
+          VERSION: ${{github.ref_name}}
       - run: npm publish --access public
         env:
-          VERSION: $GITHUB_REF_NAME
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
