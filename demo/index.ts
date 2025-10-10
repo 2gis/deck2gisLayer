@@ -108,7 +108,7 @@ function createHeatmapLayer(data) {
     return layer;
 }
 function createHexagonLayer(data) {
-    const layer = new Deck2gisLayer<HexagonLayer>({
+    const layer = new Deck2gisLayer<HexagonLayer<any>>({
         id: 'deckgl-HexagonLayer',
         deck,
         colorRange: COLOR_RANGE,
@@ -126,7 +126,7 @@ function createHexagonLayer(data) {
 }
 
 function createHexagonLayer2(data) {
-    const layer = new Deck2gisLayer<HexagonLayer>({
+    const layer = new Deck2gisLayer<HexagonLayer<any>>({
         id: 'deckgl-HexagonLayer2',
         deck,
         colorRange: COLOR_RANGE,
