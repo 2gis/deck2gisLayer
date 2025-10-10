@@ -27,9 +27,9 @@
   ],
   "devDependencies": {
     "@2gis/ts-docs-generator": "^0.1.0",
-    "@2gis/mapgl": "1.42.0",
-    "@deck.gl/aggregation-layers": "8.8.17",
-    "@deck.gl/layers": "8.8.17",
+    "@2gis/mapgl": "1.66.0",
+    "@deck.gl/aggregation-layers": "8.9.36",
+    "@deck.gl/layers": "8.9.36",
     "@types/jest": "^27.4.0",
     "@types/jest-image-snapshot": "^4.3.1",
     "@types/puppeteer": "^5.4.4",
@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@2gis/gl-matrix": "^2.4.6",
-    "@deck.gl/core": "8.8.17",
+    "@deck.gl/core": "8.9.36",
     "gl-state": "^1.0.0",
     "uniq": "^1.0.1"
   },
