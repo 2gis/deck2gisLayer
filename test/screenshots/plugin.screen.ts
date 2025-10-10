@@ -87,7 +87,7 @@ describe('Base tests', () => {
                 },
             ];
 
-            const deckHexagonLayer = new window.Deck2gisLayer<HexagonLayer>({
+            const deckHexagonLayer = new window.Deck2gisLayer<HexagonLayer<any>>({
                 id: 'deckgl-HexagonLayer',
                 deck: window.deckgl,
                 type: window.HexagonLayer,
