@@ -1,5 +1,5 @@
-import { Deck2gisLayer } from './deckgl2gisLayer';
-import { initDeck } from './utils';
+import { Deck2gisLayer } from './mapglDeckLayers';
+import { initDeck } from './helper';
 
 if (typeof window !== 'undefined') {
     if ('mapgl' in window) {

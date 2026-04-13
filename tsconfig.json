@@ -1,29 +1,12 @@
 {
-    "compilerOptions": {
-        "types": ["@2gis/gl-matrix"],
-        "target": "es6",
-        "module": "es6",
-        "moduleResolution": "node",
-        "lib": [
-            "dom",
-            "es6"
-        ],
-        "sourceMap": true,
-        "noImplicitAny": false,
-        "strictNullChecks": true,
-        "noEmitHelpers": true,
-        "importHelpers": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitThis": true,
-        "strictFunctionTypes": true,
-        "strictPropertyInitialization": true,
-        "stripInternal": true,
-        "strict": true,
-        "skipLibCheck": true,
-    },
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src", "demo"]
 }

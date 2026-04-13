@@ -1,25 +1,33 @@
+
+
 import { Deck2gisLayer } from '../src';
-import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers/typed';
+import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
 import { TextLayer } from '@deck.gl/layers';
-import { Color, Deck } from '@deck.gl/core/typed';
+import { Color, Deck } from '@deck.gl/core';
 import { data } from './data';
-import { initDeck } from '../src/utils';
+import { initDeck } from '../src/helper';
 
 declare const mapgl: any;
 
 const map = new mapgl.Map('container', {
     center: [55.291748, 25.237678],
-    zoom: 14.1,
+    zoom: 13.1,
     pitch: 40,
     key: '4970330e-7f1c-4921-808c-0eb7c4e63001',
     webglVersion: 2,
+    forceSyncIdentify: true
 });
+(window as any).map = map;
 
-let deck;
-map.once('idle', () => {
-    deck = initDeck(map, Deck, { antialiasing: 'msaa' });
-    initDeckGL();
-});
+let deck: Deck;
+
+console.log('INIT DECK', map)
+setTimeout(() => {
+    deck = initDeck(map, Deck, { antialiasing: 'none' });
+    addDemoLayersDeckGL();
+    console.log('ADD LAYERS TO DECK', deck)
+}, 3000);
+
 
 const buildingLayer = {
     id: 'house private',
@@ -38,7 +46,7 @@ const buildingLayer = {
     },
 };
 
-function initDeckGL() {
+function addDemoLayersDeckGL() {
     const deckLayer1 = createHeatmapLayer(data);
     map.addLayer(deckLayer1);
     const deckLayer2 = createHexagonLayer(data);
@@ -47,9 +55,9 @@ function initDeckGL() {
     map.addLayer(deckLayer3);
     const deckLayer4 = createTextlayer(data);
     map.addLayer(deckLayer4);
-    map.removeLayer('deckgl-HexagonLayer');
-    map.addLayer(deckLayer2);
-    map.addLayer(buildingLayer);
+    //  map.removeLayer('deckgl-HexagonLayer');
+    //  map.addLayer(deckLayer2);
+    //  map.addLayer(buildingLayer);
 }
 
 const COLOR_RANGE: Color[] = [
@@ -74,7 +82,17 @@ function getCharacters() {
 
 export const characterSet = getCharacters();
 
-function createTextlayer(data) {
+interface DataPoint {
+    point: {
+        lon: number;
+        lat: number;
+    };
+    values: {
+        capacity: number;
+    };
+}
+
+function createTextlayer(data: DataPoint[]) {
     const layer = new Deck2gisLayer<TextLayer>({
         id: 'text-layer',
         data,
@@ -83,38 +101,40 @@ function createTextlayer(data) {
         characterSet,
         fontFamily: 'SBSansText, Helvetica, Arial, sans-serif',
         getBackgroundColor: [66, 0, 255, 66],
-        getColor: [255, 128, 0],
-        getPosition: (d) => [d.point.lon, d.point.lat],
-        getText: (d) => '' + d.values.capacity,
-        getSize: 14,
+        getColor: [255, 0, 0],
+        getPosition: (d: DataPoint) => [d.point.lon, d.point.lat],
+        getText: (d: DataPoint) => '' + d.values.capacity,
+        getSize: 22,
         background: true,
     });
 
     return layer;
 }
 
-function createHeatmapLayer(data) {
+
+function createHeatmapLayer(data: DataPoint[]) {
     const layer = new Deck2gisLayer<HeatmapLayer>({
         id: 'deckgl-HeatmapLayer',
         deck,
         colorRange: COLOR_RANGE,
         type: HeatmapLayer,
         data,
-        parameters: { depthTest: false },
+        // parameters: { depthTest: false },
         getWeight: (d) => d.values.capacity,
         getPosition: (d) => [d.point.lon, d.point.lat],
+
     });
 
     return layer;
 }
-function createHexagonLayer(data) {
+function createHexagonLayer(data: DataPoint[]) {
     const layer = new Deck2gisLayer<HexagonLayer>({
         id: 'deckgl-HexagonLayer',
         deck,
         colorRange: COLOR_RANGE,
         type: HexagonLayer,
         data,
-        parameters: { depthTest: true },
+        //  parameters: { depthTest: true },
         opacity: 0.4,
         radius: 380,
         elevationScale: 2,
@@ -125,14 +145,14 @@ function createHexagonLayer(data) {
     return layer;
 }
 
-function createHexagonLayer2(data) {
+function createHexagonLayer2(data: DataPoint[]) {
     const layer = new Deck2gisLayer<HexagonLayer>({
         id: 'deckgl-HexagonLayer2',
         deck,
         colorRange: COLOR_RANGE,
         type: HexagonLayer,
         data,
-        parameters: { depthTest: true },
+        //  parameters: { depthTest: true },
         opacity: 0.5,
         radius: 500,
         elevationScale: 1,

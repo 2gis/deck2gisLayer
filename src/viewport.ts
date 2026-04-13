@@ -1,6 +1,5 @@
-import { WebMercatorViewport } from '@deck.gl/core/typed';
+import { WebMercatorViewport } from '@deck.gl/core';
 import type { Map } from '@2gis/mapgl/types';
-import { WebMercatorViewportOptions } from '@deck.gl/core/typed/viewports/web-mercator-viewport';
 
 /**
  * @hidden
@@ -36,7 +35,7 @@ export class MapglMercatorViewport extends WebMercatorViewport {
  * @hidden
  * @internal
  */
-export function getViewState(map: Map): WebMercatorViewportOptions & {
+export function getViewState(map: Map): any & {
     padding: {
         left: number;
         right: number;
@@ -45,7 +44,7 @@ export function getViewState(map: Map): WebMercatorViewportOptions & {
     };
 } {
     const [lng, lat] = map.getCenter();
-    const viewState: WebMercatorViewportOptions & {
+    const viewState: any & {
         padding: {
             left: number;
             right: number;
@@ -93,7 +92,7 @@ function fovCorrection(map: Map, fovy: number, needCorrect?: boolean) {
     return fovy;
 }
 
-function correctViewAndSize(state) {
+function correctViewAndSize(state: any) {
     const { size, pitch, padding } = state;
 
     const correctedPaddingTopScreen = Math.max(0, padding.top - padding.bottom) * Math.tan(pitch);

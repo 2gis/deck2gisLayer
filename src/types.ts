@@ -1,4 +1,4 @@
-import type { DeckProps } from '@deck.gl/core/typed';
+import type { DeckProps } from '@deck.gl/core';
 import { RenderTarget } from './2gl/RenderTarget';
 import { ShaderProgram } from './2gl/ShaderProgram';
 import { Vao } from './2gl/Vao';
@@ -37,8 +37,8 @@ export interface MapViewState {
 export type CustomRenderInternalProps = Partial<DeckProps> & {
     _customRender?: (reason: string) => void;
     _2gisData?: any;
-    _2glRenderTarget?: RenderTarget;
-    _2glMsaaFrameBuffer?: WebGLFramebuffer | null;
+    _2glRenderTarget?: RenderTarget & { _lumaFramebuffer: LumaFramebuffer };
+    _2glMsaaFrameBuffer?: LumaFramebuffer | null;
     _2glProgram?: ShaderProgram;
     _2glVao?: Vao;
     _2gisFramestart?: boolean;
@@ -54,10 +54,16 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
  */
 export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
 
-export type CustomRenderProps = { antialiasing?: AntiAliasingMode };
+export type CustomRenderProps = { antialiasing?: AntiAliasingMode, parameters?: Partial<DeckProps['parameters']> } & Partial<DeckProps>;
 
 /**
  * CustomRenderProps is type extends from DeckProps:
  * https://deck.gl/docs/api-reference/core/deck#properties
  */
 export type DeckRenderProps = Partial<DeckProps> & CustomRenderProps;
+
+/**
+ * @hidden
+ * @internal
+ */
+export type LumaFramebuffer = { handle: WebGLFramebuffer; width: number; height: number; colorAttachments: {}[]; resize: (size: [number, number]) => void };
