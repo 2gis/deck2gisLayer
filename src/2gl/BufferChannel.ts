@@ -1,5 +1,5 @@
-import { Buffer, BufferBindOptions } from './Buffer';
-import { GLContext } from './types';
+import { Buffer, BufferBindOptions } from "./Buffer";
+import { GLContext } from "./types";
 
 /**
  * Класс BufferChannel используется, если данные в обычном буфере имееют разные типы
@@ -11,30 +11,36 @@ import { GLContext } from './types';
  * @param {BufferBindOptions} options
  */
 export class BufferChannel {
-    /**
-     * Параметры для связывания буфера
-     */
-    public options: BufferBindOptions;
-    /**
-     * Исходный буфер
-     */
-    private _buffer: Buffer;
-    constructor(buffer: Buffer, options = {}) {
-        this._buffer = buffer;
-        this.options = Object.assign({}, Buffer.defaultOptions, options);
-    }
+  /**
+   * Параметры для связывания буфера
+   */
+  public options: BufferBindOptions;
+  /**
+   * Исходный буфер
+   */
+  private _buffer: Buffer;
+  constructor(buffer: Buffer, options = {}) {
+    this._buffer = buffer;
+    this.options = Object.assign({}, Buffer.defaultOptions, options);
+  }
 
-    /**
-     * Связывает данные с контекстом WebGL с нужными параметрами.
-     * Вызывает {@link Buffer#bind} исходного буфера.
-     */
-    public bind(
-        gl: GLContext,
-        location: number,
-        options?: BufferBindOptions,
-        instancesExt?: ANGLE_instanced_arrays,
-        locationsCount?: number,
-    ) {
-        this._buffer.bind(gl, location, options || this.options, instancesExt, locationsCount);
-    }
+  /**
+   * Связывает данные с контекстом WebGL с нужными параметрами.
+   * Вызывает {@link Buffer#bind} исходного буфера.
+   */
+  public bind(
+    gl: GLContext,
+    location: number,
+    options?: BufferBindOptions,
+    instancesExt?: ANGLE_instanced_arrays,
+    locationsCount?: number,
+  ) {
+    this._buffer.bind(
+      gl,
+      location,
+      options || this.options,
+      instancesExt,
+      locationsCount,
+    );
+  }
 }

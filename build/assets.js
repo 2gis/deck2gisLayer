@@ -1,7 +1,7 @@
-const { mkdirSync, copyFileSync } = require('fs');
+const { mkdirSync, copyFileSync } = require("fs");
 
-mkdirSync('dist', {
-    recursive: true,
+mkdirSync("dist", {
+  recursive: true,
 });
 
-copyFileSync('demo/index.html', 'dist/index.html');
+copyFileSync("demo/index.html", "dist/index.html");

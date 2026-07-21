@@ -1,13 +1,13 @@
-import type { DeckProps } from '@deck.gl/core';
-import { RenderTarget } from './2gl/RenderTarget';
-import { ShaderProgram } from './2gl/ShaderProgram';
-import { Vao } from './2gl/Vao';
+import type { DeckProps } from "@deck.gl/core";
+import { RenderTarget } from "./2gl/RenderTarget";
+import { ShaderProgram } from "./2gl/ShaderProgram";
+import { Vao } from "./2gl/Vao";
 
 export interface DeckCustomLayer {
-    type: 'custom';
-    id: string;
-    render: (gl: WebGLRenderingContext) => void;
-    props: any;
+  type: "custom";
+  id: string;
+  render: (gl: WebGLRenderingContext) => void;
+  props: any;
 }
 
 /**
@@ -15,19 +15,19 @@ export interface DeckCustomLayer {
  * @internal
  */
 export interface MapViewState {
-    repeat: boolean;
-    padding: {
-        left: number;
-        right: number;
-        top: number;
-        bottom: number;
-    };
-    longitude: number;
-    latitude: number;
-    zoom: number;
-    bearing: number;
-    pitch: number;
-    fovy: number;
+  repeat: boolean;
+  padding: {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
+  longitude: number;
+  latitude: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
+  fovy: number;
 }
 
 /**
@@ -35,15 +35,15 @@ export interface MapViewState {
  * @internal
  */
 export type CustomRenderInternalProps = Partial<DeckProps> & {
-    _customRender?: (reason: string) => void;
-    _2gisData?: any;
-    _2glRenderTarget?: RenderTarget & { _lumaFramebuffer: LumaFramebuffer };
-    _2glMsaaFrameBuffer?: LumaFramebuffer | null;
-    _2glProgram?: ShaderProgram;
-    _2glVao?: Vao;
-    _2gisFramestart?: boolean;
-    _antialiasing?: AntiAliasingMode;
-    _2gisInitDeck?: boolean;
+  _customRender?: (reason: string) => void;
+  _2gisData?: any;
+  _2glRenderTarget?: RenderTarget & { _lumaFramebuffer: LumaFramebuffer };
+  _2glMsaaFrameBuffer?: LumaFramebuffer | null;
+  _2glProgram?: ShaderProgram;
+  _2glVao?: Vao;
+  _2gisFramestart?: boolean;
+  _antialiasing?: AntiAliasingMode;
+  _2gisInitDeck?: boolean;
 };
 
 /**
@@ -52,9 +52,12 @@ export type CustomRenderInternalProps = Partial<DeckProps> & {
  * msaa - Multisample Anti-Aliasing (only works with webgl2)
  * none - Disable anti-aliasing
  */
-export type AntiAliasingMode = 'fxaa' | 'msaa' | 'none';
+export type AntiAliasingMode = "fxaa" | "msaa" | "none";
 
-export type CustomRenderProps = { antialiasing?: AntiAliasingMode, parameters?: Partial<DeckProps['parameters']> } & Partial<DeckProps>;
+export type CustomRenderProps = {
+  antialiasing?: AntiAliasingMode;
+  parameters?: Partial<DeckProps["parameters"]>;
+} & Partial<DeckProps>;
 
 /**
  * CustomRenderProps is type extends from DeckProps:
@@ -66,4 +69,10 @@ export type DeckRenderProps = Partial<DeckProps> & CustomRenderProps;
  * @hidden
  * @internal
  */
-export type LumaFramebuffer = { handle: WebGLFramebuffer; width: number; height: number; colorAttachments: {}[]; resize: (size: [number, number]) => void };
+export type LumaFramebuffer = {
+  handle: WebGLFramebuffer;
+  width: number;
+  height: number;
+  colorAttachments: {}[];
+  resize: (size: [number, number]) => void;
+};
