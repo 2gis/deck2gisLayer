@@ -6,24 +6,30 @@ import type { Map } from '@2gis/mapgl/types';
  * @internal
  */
 export class MapglMercatorViewport extends WebMercatorViewport {
-    constructor(map: Map) {
-        const [width, height] = map.getSize();
-
-        super(
-            Object.assign(
-                {
-                    id: '2gis',
-                    x: 0,
-                    y: 0,
-                    width,
-                    height,
-                },
-                getViewState(map),
-                {
-                    nearZMultiplier: 1 / (height || 1),
-                },
-            ),
-        );
+    constructor(mapOrProps: Map | Record<string, any>) {
+        // deck.gl internals may recreate viewports via `new viewport.constructor(viewState)`,
+        // passing a plain options object instead of a Map instance.
+        if (typeof (mapOrProps as any).getSize === 'function') {
+            const map = mapOrProps as Map;
+            const [width, height] = map.getSize();
+            super(
+                Object.assign(
+                    {
+                        id: '2gis',
+                        x: 0,
+                        y: 0,
+                        width,
+                        height,
+                    },
+                    getViewState(map),
+                    {
+                        nearZMultiplier: 1 / (height || 1),
+                    },
+                ),
+            );
+        } else {
+            super({ id: '2gis', ...mapOrProps });
+        }
     }
 
     get projectionMode() {

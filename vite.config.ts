@@ -71,6 +71,55 @@ export default defineConfig(({ command, mode }) => {
         },
         plugins: [shaderAsText(), copyAfterBuild()]
       };
+    } else if (mode === 'plain') {
+      // сборка в обычный скрипт (IIFE), не модуль
+      return {
+        root: '.',
+        resolve: {
+          alias: [
+            { find: '@deck.gl/core/typed', replacement: '@deck.gl/core' }
+          ]
+        },
+        build: {
+          outDir: 'dist',
+          emptyOutDir: false,
+          minify: true,
+          rollupOptions: {
+            input: './src/index.ts',
+            output: {
+              format: 'iife',
+              name: 'deck2gisLayer',
+              entryFileNames: 'index.js',
+            },
+          },
+        },
+        plugins: [shaderAsText()]
+      };
+    } else if (mode === 'esm') {
+      // сборка в ES-модуль с именованными экспортами Deck2gisLayer, initDeck
+      return {
+        root: '.',
+        resolve: {
+          alias: [
+            { find: '@deck.gl/core/typed', replacement: '@deck.gl/core' }
+          ]
+        },
+        build: {
+          outDir: 'dist',
+          emptyOutDir: false,
+          minify: true,
+          rollupOptions: {
+            input: './src/index.ts',
+            external: ['@deck.gl/core', '@deck.gl/layers', '@deck.gl/core/typed'],
+            output: {
+              format: 'es',
+              entryFileNames: 'index.esm.js',
+              preserveModules: false,
+            },
+          },
+        },
+        plugins: [shaderAsText()]
+      };
     } else {
       // обычная сборка основного кода из src (ES module для импортирования)
       return {

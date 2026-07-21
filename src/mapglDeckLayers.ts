@@ -160,8 +160,33 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
 
         (this.props.deck as any).glStateStore.useDeckWebglState();
 
-
         const gl = this.gl;
+
+        // ColumnGeometry (deck.gl) создаёт indices (Uint16Array) для extruded-режима.
+        // fillModel.setGeometry(geometry) привязывает их как indexBuffer,
+        // но fillModel.setIndexBuffer(null) может не очистить привязку.
+        // С triangle-strip + активный индексный буфер WebGL рисует через
+        // drawElementsInstanced вместо drawArrays — индексы не соответствуют
+        // порядку вершин triangle-strip, что приводит к артефактам отрисовки
+        // (часть граней гексагонов пропадает). Принудительно сбрасываем.
+        try {
+            const layers = (this.props.deck as any).layerManager?.layers;
+            if (layers) {
+                for (const composite of layers) {
+                    const subs = composite.internalState?.subLayers;
+                    if (!subs) continue;
+                    for (const sub of subs) {
+                        const model = sub.state?.fillModel || sub.state?.model;
+                        if (model?.vertexArray?.indexBuffer) {
+                            model.vertexArray.indexBuffer = null;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+
         const mapSize = (this.props.deck.props as CustomRenderInternalProps)._2gisData._2gisMap.getSize();
         const clearColor = (this.props as any)?.parameters?.clearColor || [0, 0, 0];
         const { _2gisData } = this.props.deck.props as CustomRenderInternalProps;
@@ -179,8 +204,6 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
 
             if (this.props.deck.width !== mapSize[0] || this.props.deck.height !== mapSize[1]) {
                 (this.props.deck as any).animationLoop._resizeViewport();
-                // onMapResize may delete and recreate framebuffer objects.
-                // Unbind current target first and refresh local references after call.
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
                 onMapResize(
                     (this.props.deck.props as CustomRenderInternalProps)._2gisData._2gisMap,
@@ -194,7 +217,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             msaaFrameBuffer
                 ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer.handle)
                 : renderTarget.bind(gl);
-            this.clearColor(gl, clearColor);
+            this.clearColorDepth(gl, clearColor);
 
         }
 
@@ -211,7 +234,6 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             this as any,
             currentTarget,
         );
-
 
         if (!isDrawed) {
             (this.props.deck as any).glStateStore.useMapglWebglState();

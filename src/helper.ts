@@ -26,7 +26,7 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
 
 
     const deck = new Deck(initDeck2gisProps(map, deckProps));
-
+    console.info('Deck2GisLayers v3.13')
     // Initialize WebGL state stores and set the initial state to deck's store
     // Должно вызываться сразу после создания deck, до любых операций с WebGL, чтобы гарантировать правильное состояние при первом рендере
     const stateStore = initWebglStateStores(map);
@@ -41,7 +41,7 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
     deck.props._2glRenderTarget = renderTarget;
     deck.props._2glProgram = program;
     deck.props._2glVao = vao;
-    
+
     if (deckAntiaiasingMode === 'msaa') {
         const msaaFrameBuffer = createFramebufferMSAA(map);
         (deck.props as CustomRenderInternalProps)._2glMsaaFrameBuffer = msaaFrameBuffer;
@@ -57,7 +57,7 @@ export function initDeck(map: Map, Deck: any, deckProps?: DeckRenderProps): Deck
 
     // Вернуть исходное состояние WebGL, чтобы 2gis рендерился корректно, а deck.gl не влиял на него после инициализации
     deck.glStateStore.useMapglWebglState();
-    
+
     return deck as Deck;
 }
 
@@ -134,13 +134,15 @@ function initDeck2gisProps(map: Map, deckProps?: CustomRenderProps): DeckProps {
     const gl = map.getWebGLContext();
     const deck2gisProps: any = {
         parameters: {
-            depthMask: true,
-            depthTest: true,
+            depthWriteEnabled: true,
+            depthCompare: 'less-equal',
             blend: true,
-            blendFunc: [gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA],
-            polygonOffsetFill: true,
-            depthFunc: gl.LEQUAL,
-            blendEquation: gl.FUNC_ADD,
+            blendColorSrcFactor: 'src-alpha',
+            blendColorDstFactor: 'one-minus-src-alpha',
+            blendAlphaSrcFactor: 'one',
+            blendAlphaDstFactor: 'one-minus-src-alpha',
+            blendColorOperation: 'add',
+            blendAlphaOperation: 'add',
         },
         ...deckProps,
         _2gisData: {

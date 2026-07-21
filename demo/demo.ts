@@ -22,11 +22,12 @@ const map = new mapgl.Map('container', {
 let deck: Deck;
 
 console.log('INIT DECK', map)
-setTimeout(() => {
-    deck = initDeck(map, Deck, { antialiasing: 'none' });
+  deck = initDeck(map, Deck, { antialiasing: 'msaa' });
+map.once('styleload',() => {
+  
     addDemoLayersDeckGL();
     console.log('ADD LAYERS TO DECK', deck)
-}, 3000);
+});
 
 
 const buildingLayer = {

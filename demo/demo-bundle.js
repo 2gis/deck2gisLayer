@@ -26036,40 +26036,40 @@ ${fragment}
     },
     EXT_shader_texture_lod: {}
   };
-  const getWEBGL_draw_buffers = (gl2) => ({
+  const getWEBGL_draw_buffers = (gl) => ({
     drawBuffersWEBGL(buffers) {
-      return gl2.drawBuffers(buffers);
+      return gl.drawBuffers(buffers);
     },
     COLOR_ATTACHMENT0_WEBGL: 36064,
     COLOR_ATTACHMENT1_WEBGL: 36065,
     COLOR_ATTACHMENT2_WEBGL: 36066,
     COLOR_ATTACHMENT3_WEBGL: 36067
   });
-  const getOES_vertex_array_object = (gl2) => ({
+  const getOES_vertex_array_object = (gl) => ({
     VERTEX_ARRAY_BINDING_OES: 34229,
     createVertexArrayOES() {
-      return gl2.createVertexArray();
+      return gl.createVertexArray();
     },
     deleteVertexArrayOES(vertexArray) {
-      return gl2.deleteVertexArray(vertexArray);
+      return gl.deleteVertexArray(vertexArray);
     },
     isVertexArrayOES(vertexArray) {
-      return gl2.isVertexArray(vertexArray);
+      return gl.isVertexArray(vertexArray);
     },
     bindVertexArrayOES(vertexArray) {
-      return gl2.bindVertexArray(vertexArray);
+      return gl.bindVertexArray(vertexArray);
     }
   });
-  const getANGLE_instanced_arrays = (gl2) => ({
+  const getANGLE_instanced_arrays = (gl) => ({
     VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE: 35070,
     drawArraysInstancedANGLE(...args) {
-      return gl2.drawArraysInstanced(...args);
+      return gl.drawArraysInstanced(...args);
     },
     drawElementsInstancedANGLE(...args) {
-      return gl2.drawElementsInstanced(...args);
+      return gl.drawElementsInstanced(...args);
     },
     vertexAttribDivisorANGLE(...args) {
-      return gl2.vertexAttribDivisor(...args);
+      return gl.vertexAttribDivisor(...args);
     }
   });
   function enforceWebGL2(enforce = true) {
@@ -26091,18 +26091,18 @@ ${fragment}
       return this.originalGetContext(contextId, options);
     };
   }
-  function polyfillWebGL1Extensions(gl2) {
-    gl2.getExtension("EXT_color_buffer_float");
+  function polyfillWebGL1Extensions(gl) {
+    gl.getExtension("EXT_color_buffer_float");
     const boundExtensions = {
       ...WEBGL1_STATIC_EXTENSIONS,
-      WEBGL_disjoint_timer_query: gl2.getExtension("EXT_disjoint_timer_query_webgl2"),
-      WEBGL_draw_buffers: getWEBGL_draw_buffers(gl2),
-      OES_vertex_array_object: getOES_vertex_array_object(gl2),
-      ANGLE_instanced_arrays: getANGLE_instanced_arrays(gl2)
+      WEBGL_disjoint_timer_query: gl.getExtension("EXT_disjoint_timer_query_webgl2"),
+      WEBGL_draw_buffers: getWEBGL_draw_buffers(gl),
+      OES_vertex_array_object: getOES_vertex_array_object(gl),
+      ANGLE_instanced_arrays: getANGLE_instanced_arrays(gl)
     };
-    const originalGetExtension = gl2.getExtension;
-    gl2.getExtension = function(extensionName) {
-      const ext = originalGetExtension.call(gl2, extensionName);
+    const originalGetExtension = gl.getExtension;
+    gl.getExtension = function(extensionName) {
+      const ext = originalGetExtension.call(gl, extensionName);
       if (ext) {
         return ext;
       }
@@ -26111,9 +26111,9 @@ ${fragment}
       }
       return null;
     };
-    const originalGetSupportedExtensions = gl2.getSupportedExtensions;
-    gl2.getSupportedExtensions = function() {
-      const extensions = originalGetSupportedExtensions.apply(gl2) || [];
+    const originalGetSupportedExtensions = gl.getSupportedExtensions;
+    gl.getSupportedExtensions = function() {
+      const extensions = originalGetSupportedExtensions.apply(gl) || [];
       return extensions?.concat(Object.keys(boundExtensions));
     };
   }
@@ -26179,10 +26179,10 @@ ${fragment}
       });
     }
     if (props.gl) {
-      const gl2 = props.gl;
-      const device = gl2.device;
+      const gl = props.gl;
+      const device = gl.device;
       spector?.startCapture(props.gl, 500);
-      gl2.device = device;
+      gl.device = device;
       new Promise((resolve) => setTimeout(resolve, 2e3)).then((_2) => {
         log.info("Spector capture stopped after 2 seconds")();
         spector?.stopCapture();
@@ -26191,9 +26191,9 @@ ${fragment}
     return spector;
   }
   const WEBGL_DEBUG_CDN_URL = "https://unpkg.com/webgl-debug@2.0.1/index.js";
-  function getWebGLContextData(gl2) {
-    gl2.luma = gl2.luma || {};
-    return gl2.luma;
+  function getWebGLContextData(gl) {
+    gl.luma = gl.luma || {};
+    return gl.luma;
   }
   async function loadWebGLDeveloperTools() {
     if (isBrowser$1() && !globalThis.WebGLDebugUtils) {
@@ -26202,24 +26202,24 @@ ${fragment}
       await loadScript(WEBGL_DEBUG_CDN_URL);
     }
   }
-  function makeDebugContext(gl2, props = {}) {
-    return props.debugWebGL || props.traceWebGL ? getDebugContext(gl2, props) : getRealContext(gl2);
+  function makeDebugContext(gl, props = {}) {
+    return props.debugWebGL || props.traceWebGL ? getDebugContext(gl, props) : getRealContext(gl);
   }
-  function getRealContext(gl2) {
-    const data2 = getWebGLContextData(gl2);
-    return data2.realContext ? data2.realContext : gl2;
+  function getRealContext(gl) {
+    const data2 = getWebGLContextData(gl);
+    return data2.realContext ? data2.realContext : gl;
   }
-  function getDebugContext(gl2, props) {
+  function getDebugContext(gl, props) {
     if (!globalThis.WebGLDebugUtils) {
       log.warn("webgl-debug not loaded")();
-      return gl2;
+      return gl;
     }
-    const data2 = getWebGLContextData(gl2);
+    const data2 = getWebGLContextData(gl);
     if (data2.debugContext) {
       return data2.debugContext;
     }
-    globalThis.WebGLDebugUtils.init({ ...GLEnum, ...gl2 });
-    const glDebug = globalThis.WebGLDebugUtils.makeDebugContext(gl2, onGLError.bind(null, props), onValidateGLFunc.bind(null, props));
+    globalThis.WebGLDebugUtils.init({ ...GLEnum, ...gl });
+    const glDebug = globalThis.WebGLDebugUtils.makeDebugContext(gl, onGLError.bind(null, props), onValidateGLFunc.bind(null, props));
     for (const key in GLEnum) {
       if (!(key in glDebug) && typeof GLEnum[key] === "number") {
         glDebug[key] = GLEnum[key];
@@ -26227,10 +26227,10 @@ ${fragment}
     }
     class WebGLDebugContext {
     }
-    Object.setPrototypeOf(glDebug, Object.getPrototypeOf(gl2));
+    Object.setPrototypeOf(glDebug, Object.getPrototypeOf(gl));
     Object.setPrototypeOf(WebGLDebugContext, glDebug);
     const debugContext = Object.create(WebGLDebugContext);
-    data2.realContext = gl2;
+    data2.realContext = gl;
     data2.debugContext = debugContext;
     debugContext.debug = true;
     return debugContext;
@@ -26296,25 +26296,25 @@ ${fragment}
      * @param gl
      * @returns
      */
-    async attach(gl2, props = {}) {
+    async attach(gl, props = {}) {
       const { WebGLDevice: WebGLDevice2 } = await __vitePreload(async () => {
         const { WebGLDevice: WebGLDevice3 } = await Promise.resolve().then(() => webglDevice);
         return { WebGLDevice: WebGLDevice3 };
       }, false ? __VITE_PRELOAD__ : void 0);
-      if (gl2 instanceof WebGLDevice2) {
-        return gl2;
+      if (gl instanceof WebGLDevice2) {
+        return gl;
       }
-      if (gl2?.device instanceof WebGLDevice2) {
-        return gl2.device;
+      if (gl?.device instanceof WebGLDevice2) {
+        return gl.device;
       }
-      if (!isWebGL(gl2)) {
+      if (!isWebGL(gl)) {
         throw new Error("Invalid WebGL2RenderingContext");
       }
       const createCanvasContext = props.createCanvasContext === true ? {} : props.createCanvasContext;
       return new WebGLDevice2({
         ...props,
-        _handle: gl2,
-        createCanvasContext: { canvas: gl2.canvas, autoResize: false, ...createCanvasContext }
+        _handle: gl,
+        createCanvasContext: { canvas: gl.canvas, autoResize: false, ...createCanvasContext }
       });
     }
     async create(props = {}) {
@@ -26347,11 +26347,11 @@ ${fragment}
       }
     }
   }
-  function isWebGL(gl2) {
-    if (typeof WebGL2RenderingContext !== "undefined" && gl2 instanceof WebGL2RenderingContext) {
+  function isWebGL(gl) {
+    if (typeof WebGL2RenderingContext !== "undefined" && gl instanceof WebGL2RenderingContext) {
       return true;
     }
-    return Boolean(gl2 && Number.isFinite(gl2._version));
+    return Boolean(gl && Number.isFinite(gl._version));
   }
   const webgl2Adapter = new WebGLAdapter();
   const GL_PARAMETER_DEFAULTS = {
@@ -26434,14 +26434,14 @@ ${fragment}
     [3315]: 0,
     [32877]: 0
   };
-  const enable = (gl2, value, key) => value ? gl2.enable(key) : gl2.disable(key);
-  const hint = (gl2, value, key) => gl2.hint(key, value);
-  const pixelStorei = (gl2, value, key) => gl2.pixelStorei(key, value);
-  const bindFramebuffer = (gl2, value, key) => {
+  const enable = (gl, value, key) => value ? gl.enable(key) : gl.disable(key);
+  const hint = (gl, value, key) => gl.hint(key, value);
+  const pixelStorei = (gl, value, key) => gl.pixelStorei(key, value);
+  const bindFramebuffer = (gl, value, key) => {
     const target = key === 36006 ? 36009 : 36008;
-    return gl2.bindFramebuffer(target, value);
+    return gl.bindFramebuffer(target, value);
   };
-  const bindBuffer = (gl2, value, key) => {
+  const bindBuffer = (gl, value, key) => {
     const bindingMap = {
       [34964]: 34962,
       [36662]: 36662,
@@ -26450,35 +26450,35 @@ ${fragment}
       [35055]: 35052
     };
     const glTarget = bindingMap[key];
-    gl2.bindBuffer(glTarget, value);
+    gl.bindBuffer(glTarget, value);
   };
   function isArray$2(array) {
     return Array.isArray(array) || ArrayBuffer.isView(array) && !(array instanceof DataView);
   }
   const GL_PARAMETER_SETTERS = {
     [3042]: enable,
-    [32773]: (gl2, value) => gl2.blendColor(...value),
+    [32773]: (gl, value) => gl.blendColor(...value),
     [32777]: "blendEquation",
     [34877]: "blendEquation",
     [32969]: "blendFunc",
     [32968]: "blendFunc",
     [32971]: "blendFunc",
     [32970]: "blendFunc",
-    [3106]: (gl2, value) => gl2.clearColor(...value),
-    [3107]: (gl2, value) => gl2.colorMask(...value),
+    [3106]: (gl, value) => gl.clearColor(...value),
+    [3107]: (gl, value) => gl.colorMask(...value),
     [2884]: enable,
-    [2885]: (gl2, value) => gl2.cullFace(value),
+    [2885]: (gl, value) => gl.cullFace(value),
     [2929]: enable,
-    [2931]: (gl2, value) => gl2.clearDepth(value),
-    [2932]: (gl2, value) => gl2.depthFunc(value),
-    [2928]: (gl2, value) => gl2.depthRange(...value),
-    [2930]: (gl2, value) => gl2.depthMask(value),
+    [2931]: (gl, value) => gl.clearDepth(value),
+    [2932]: (gl, value) => gl.depthFunc(value),
+    [2928]: (gl, value) => gl.depthRange(...value),
+    [2930]: (gl, value) => gl.depthMask(value),
     [3024]: enable,
     [35723]: hint,
-    [35725]: (gl2, value) => gl2.useProgram(value),
-    [36007]: (gl2, value) => gl2.bindRenderbuffer(36161, value),
-    [36389]: (gl2, value) => gl2.bindTransformFeedback?.(36386, value),
-    [34229]: (gl2, value) => gl2.bindVertexArray(value),
+    [35725]: (gl, value) => gl.useProgram(value),
+    [36007]: (gl, value) => gl.bindRenderbuffer(36161, value),
+    [36389]: (gl, value) => gl.bindTransformFeedback?.(36386, value),
+    [34229]: (gl, value) => gl.bindVertexArray(value),
     // NOTE: FRAMEBUFFER_BINDING and DRAW_FRAMEBUFFER_BINDING(WebGL2) refer same state.
     [36006]: bindFramebuffer,
     [36010]: bindFramebuffer,
@@ -26488,9 +26488,9 @@ ${fragment}
     [36663]: bindBuffer,
     [35053]: bindBuffer,
     [35055]: bindBuffer,
-    [2886]: (gl2, value) => gl2.frontFace(value),
+    [2886]: (gl, value) => gl.frontFace(value),
     [33170]: hint,
-    [2849]: (gl2, value) => gl2.lineWidth(value),
+    [2849]: (gl, value) => gl.lineWidth(value),
     [32823]: enable,
     [32824]: "polygonOffset",
     [10752]: "polygonOffset",
@@ -26500,11 +26500,11 @@ ${fragment}
     [32938]: "sampleCoverage",
     [32939]: "sampleCoverage",
     [3089]: enable,
-    [3088]: (gl2, value) => gl2.scissor(...value),
+    [3088]: (gl, value) => gl.scissor(...value),
     [2960]: enable,
-    [2961]: (gl2, value) => gl2.clearStencil(value),
-    [2968]: (gl2, value) => gl2.stencilMaskSeparate(1028, value),
-    [36005]: (gl2, value) => gl2.stencilMaskSeparate(1029, value),
+    [2961]: (gl, value) => gl.clearStencil(value),
+    [2968]: (gl, value) => gl.stencilMaskSeparate(1028, value),
+    [36005]: (gl, value) => gl.stencilMaskSeparate(1029, value),
     [2962]: "stencilFuncFront",
     [2967]: "stencilFuncFront",
     [2963]: "stencilFuncFront",
@@ -26517,7 +26517,7 @@ ${fragment}
     [34817]: "stencilOpBack",
     [34818]: "stencilOpBack",
     [34819]: "stencilOpBack",
-    [2978]: (gl2, value) => gl2.viewport(...value),
+    [2978]: (gl, value) => gl.viewport(...value),
     // WEBGL2 EXTENSIONS
     // EXT_depth_clamp https://registry.khronos.org/webgl/extensions/EXT_depth_clamp/
     [34383]: enable,
@@ -26550,75 +26550,75 @@ ${fragment}
     [3315]: pixelStorei,
     [32877]: pixelStorei,
     // Function-style setters
-    framebuffer: (gl2, framebuffer) => {
+    framebuffer: (gl, framebuffer) => {
       const handle = framebuffer && "handle" in framebuffer ? framebuffer.handle : framebuffer;
-      return gl2.bindFramebuffer(36160, handle);
+      return gl.bindFramebuffer(36160, handle);
     },
-    blend: (gl2, value) => value ? gl2.enable(3042) : gl2.disable(3042),
-    blendColor: (gl2, value) => gl2.blendColor(...value),
-    blendEquation: (gl2, args) => {
+    blend: (gl, value) => value ? gl.enable(3042) : gl.disable(3042),
+    blendColor: (gl, value) => gl.blendColor(...value),
+    blendEquation: (gl, args) => {
       const separateModes = typeof args === "number" ? [args, args] : args;
-      gl2.blendEquationSeparate(...separateModes);
+      gl.blendEquationSeparate(...separateModes);
     },
-    blendFunc: (gl2, args) => {
+    blendFunc: (gl, args) => {
       const separateFuncs = args?.length === 2 ? [...args, ...args] : args;
-      gl2.blendFuncSeparate(...separateFuncs);
+      gl.blendFuncSeparate(...separateFuncs);
     },
-    clearColor: (gl2, value) => gl2.clearColor(...value),
-    clearDepth: (gl2, value) => gl2.clearDepth(value),
-    clearStencil: (gl2, value) => gl2.clearStencil(value),
-    colorMask: (gl2, value) => gl2.colorMask(...value),
-    cull: (gl2, value) => value ? gl2.enable(2884) : gl2.disable(2884),
-    cullFace: (gl2, value) => gl2.cullFace(value),
-    depthTest: (gl2, value) => value ? gl2.enable(2929) : gl2.disable(2929),
-    depthFunc: (gl2, value) => gl2.depthFunc(value),
-    depthMask: (gl2, value) => gl2.depthMask(value),
-    depthRange: (gl2, value) => gl2.depthRange(...value),
-    dither: (gl2, value) => value ? gl2.enable(3024) : gl2.disable(3024),
-    derivativeHint: (gl2, value) => {
-      gl2.hint(35723, value);
+    clearColor: (gl, value) => gl.clearColor(...value),
+    clearDepth: (gl, value) => gl.clearDepth(value),
+    clearStencil: (gl, value) => gl.clearStencil(value),
+    colorMask: (gl, value) => gl.colorMask(...value),
+    cull: (gl, value) => value ? gl.enable(2884) : gl.disable(2884),
+    cullFace: (gl, value) => gl.cullFace(value),
+    depthTest: (gl, value) => value ? gl.enable(2929) : gl.disable(2929),
+    depthFunc: (gl, value) => gl.depthFunc(value),
+    depthMask: (gl, value) => gl.depthMask(value),
+    depthRange: (gl, value) => gl.depthRange(...value),
+    dither: (gl, value) => value ? gl.enable(3024) : gl.disable(3024),
+    derivativeHint: (gl, value) => {
+      gl.hint(35723, value);
     },
-    frontFace: (gl2, value) => gl2.frontFace(value),
-    mipmapHint: (gl2, value) => gl2.hint(33170, value),
-    lineWidth: (gl2, value) => gl2.lineWidth(value),
-    polygonOffsetFill: (gl2, value) => value ? gl2.enable(32823) : gl2.disable(32823),
-    polygonOffset: (gl2, value) => gl2.polygonOffset(...value),
-    sampleCoverage: (gl2, value) => gl2.sampleCoverage(value[0], value[1] || false),
-    scissorTest: (gl2, value) => value ? gl2.enable(3089) : gl2.disable(3089),
-    scissor: (gl2, value) => gl2.scissor(...value),
-    stencilTest: (gl2, value) => value ? gl2.enable(2960) : gl2.disable(2960),
-    stencilMask: (gl2, value) => {
+    frontFace: (gl, value) => gl.frontFace(value),
+    mipmapHint: (gl, value) => gl.hint(33170, value),
+    lineWidth: (gl, value) => gl.lineWidth(value),
+    polygonOffsetFill: (gl, value) => value ? gl.enable(32823) : gl.disable(32823),
+    polygonOffset: (gl, value) => gl.polygonOffset(...value),
+    sampleCoverage: (gl, value) => gl.sampleCoverage(value[0], value[1] || false),
+    scissorTest: (gl, value) => value ? gl.enable(3089) : gl.disable(3089),
+    scissor: (gl, value) => gl.scissor(...value),
+    stencilTest: (gl, value) => value ? gl.enable(2960) : gl.disable(2960),
+    stencilMask: (gl, value) => {
       value = isArray$2(value) ? value : [value, value];
       const [mask, backMask] = value;
-      gl2.stencilMaskSeparate(1028, mask);
-      gl2.stencilMaskSeparate(1029, backMask);
+      gl.stencilMaskSeparate(1028, mask);
+      gl.stencilMaskSeparate(1029, backMask);
     },
-    stencilFunc: (gl2, args) => {
+    stencilFunc: (gl, args) => {
       args = isArray$2(args) && args.length === 3 ? [...args, ...args] : args;
       const [func, ref, mask, backFunc, backRef, backMask] = args;
-      gl2.stencilFuncSeparate(1028, func, ref, mask);
-      gl2.stencilFuncSeparate(1029, backFunc, backRef, backMask);
+      gl.stencilFuncSeparate(1028, func, ref, mask);
+      gl.stencilFuncSeparate(1029, backFunc, backRef, backMask);
     },
-    stencilOp: (gl2, args) => {
+    stencilOp: (gl, args) => {
       args = isArray$2(args) && args.length === 3 ? [...args, ...args] : args;
       const [sfail, dpfail, dppass, backSfail, backDpfail, backDppass] = args;
-      gl2.stencilOpSeparate(1028, sfail, dpfail, dppass);
-      gl2.stencilOpSeparate(1029, backSfail, backDpfail, backDppass);
+      gl.stencilOpSeparate(1028, sfail, dpfail, dppass);
+      gl.stencilOpSeparate(1029, backSfail, backDpfail, backDppass);
     },
-    viewport: (gl2, value) => gl2.viewport(...value)
+    viewport: (gl, value) => gl.viewport(...value)
   };
   function getValue(glEnum, values, cache2) {
     return values[glEnum] !== void 0 ? values[glEnum] : cache2[glEnum];
   }
   const GL_COMPOSITE_PARAMETER_SETTERS = {
-    blendEquation: (gl2, values, cache2) => gl2.blendEquationSeparate(getValue(32777, values, cache2), getValue(34877, values, cache2)),
-    blendFunc: (gl2, values, cache2) => gl2.blendFuncSeparate(getValue(32969, values, cache2), getValue(32968, values, cache2), getValue(32971, values, cache2), getValue(32970, values, cache2)),
-    polygonOffset: (gl2, values, cache2) => gl2.polygonOffset(getValue(32824, values, cache2), getValue(10752, values, cache2)),
-    sampleCoverage: (gl2, values, cache2) => gl2.sampleCoverage(getValue(32938, values, cache2), getValue(32939, values, cache2)),
-    stencilFuncFront: (gl2, values, cache2) => gl2.stencilFuncSeparate(1028, getValue(2962, values, cache2), getValue(2967, values, cache2), getValue(2963, values, cache2)),
-    stencilFuncBack: (gl2, values, cache2) => gl2.stencilFuncSeparate(1029, getValue(34816, values, cache2), getValue(36003, values, cache2), getValue(36004, values, cache2)),
-    stencilOpFront: (gl2, values, cache2) => gl2.stencilOpSeparate(1028, getValue(2964, values, cache2), getValue(2965, values, cache2), getValue(2966, values, cache2)),
-    stencilOpBack: (gl2, values, cache2) => gl2.stencilOpSeparate(1029, getValue(34817, values, cache2), getValue(34818, values, cache2), getValue(34819, values, cache2))
+    blendEquation: (gl, values, cache2) => gl.blendEquationSeparate(getValue(32777, values, cache2), getValue(34877, values, cache2)),
+    blendFunc: (gl, values, cache2) => gl.blendFuncSeparate(getValue(32969, values, cache2), getValue(32968, values, cache2), getValue(32971, values, cache2), getValue(32970, values, cache2)),
+    polygonOffset: (gl, values, cache2) => gl.polygonOffset(getValue(32824, values, cache2), getValue(10752, values, cache2)),
+    sampleCoverage: (gl, values, cache2) => gl.sampleCoverage(getValue(32938, values, cache2), getValue(32939, values, cache2)),
+    stencilFuncFront: (gl, values, cache2) => gl.stencilFuncSeparate(1028, getValue(2962, values, cache2), getValue(2967, values, cache2), getValue(2963, values, cache2)),
+    stencilFuncBack: (gl, values, cache2) => gl.stencilFuncSeparate(1029, getValue(34816, values, cache2), getValue(36003, values, cache2), getValue(36004, values, cache2)),
+    stencilOpFront: (gl, values, cache2) => gl.stencilOpSeparate(1028, getValue(2964, values, cache2), getValue(2965, values, cache2), getValue(2966, values, cache2)),
+    stencilOpBack: (gl, values, cache2) => gl.stencilOpSeparate(1029, getValue(34817, values, cache2), getValue(34818, values, cache2), getValue(34819, values, cache2))
   };
   const GL_HOOKED_SETTERS = {
     // GENERIC SETTERS
@@ -26776,7 +26776,7 @@ ${fragment}
       [2978]: [x2, y2, width, height]
     })
   };
-  const isEnabled = (gl2, key) => gl2.isEnabled(key);
+  const isEnabled = (gl, key) => gl.isEnabled(key);
   const GL_PARAMETER_GETTERS = {
     [3042]: isEnabled,
     [2884]: isEnabled,
@@ -26821,7 +26821,7 @@ ${fragment}
     32874,
     34068
   ]);
-  function setGLParameters(gl2, parameters) {
+  function setGLParameters(gl, parameters) {
     if (isObjectEmpty$3(parameters)) {
       return;
     }
@@ -26833,34 +26833,34 @@ ${fragment}
         if (typeof setter === "string") {
           compositeSetters[setter] = true;
         } else {
-          setter(gl2, parameters[key], glConstant);
+          setter(gl, parameters[key], glConstant);
         }
       }
     }
-    const cache2 = gl2.state && gl2.state.cache;
+    const cache2 = gl.state && gl.state.cache;
     if (cache2) {
       for (const key in compositeSetters) {
         const compositeSetter = GL_COMPOSITE_PARAMETER_SETTERS[key];
-        compositeSetter(gl2, parameters, cache2);
+        compositeSetter(gl, parameters, cache2);
       }
     }
   }
-  function getGLParameters(gl2, parameters = GL_PARAMETER_DEFAULTS) {
+  function getGLParameters(gl, parameters = GL_PARAMETER_DEFAULTS) {
     if (typeof parameters === "number") {
       const key = parameters;
       const getter = GL_PARAMETER_GETTERS[key];
-      return getter ? getter(gl2, key) : gl2.getParameter(key);
+      return getter ? getter(gl, key) : gl.getParameter(key);
     }
     const parameterKeys = Array.isArray(parameters) ? parameters : Object.keys(parameters);
     const state = {};
     for (const key of parameterKeys) {
       const getter = GL_PARAMETER_GETTERS[key];
-      state[key] = getter ? getter(gl2, Number(key)) : gl2.getParameter(Number(key));
+      state[key] = getter ? getter(gl, Number(key)) : gl.getParameter(Number(key));
     }
     return state;
   }
-  function resetGLParameters(gl2) {
-    setGLParameters(gl2, GL_PARAMETER_DEFAULTS);
+  function resetGLParameters(gl) {
+    setGLParameters(gl, GL_PARAMETER_DEFAULTS);
   }
   function isObjectEmpty$3(object) {
     for (const key in object) {
@@ -26886,8 +26886,8 @@ ${fragment}
     return Array.isArray(x2) || ArrayBuffer.isView(x2);
   }
   class WebGLStateTracker {
-    static get(gl2) {
-      return gl2.state;
+    static get(gl) {
+      return gl.state;
     }
     gl;
     program = null;
@@ -26896,8 +26896,8 @@ ${fragment}
     cache = null;
     log;
     initialized = false;
-    constructor(gl2, props) {
-      this.gl = gl2;
+    constructor(gl, props) {
+      this.gl = gl;
       this.log = props?.log || (() => {
       });
       this._updateCache = this._updateCache.bind(this);
@@ -26919,20 +26919,20 @@ ${fragment}
      * .push() and .pop() will be available for saving,
      * temporarily modifying, and then restoring state.
      */
-    trackState(gl2, options) {
-      this.cache = options?.copyState ? getGLParameters(gl2) : Object.assign({}, GL_PARAMETER_DEFAULTS);
+    trackState(gl, options) {
+      this.cache = options?.copyState ? getGLParameters(gl) : Object.assign({}, GL_PARAMETER_DEFAULTS);
       if (this.initialized) {
         throw new Error("WebGLStateTracker");
       }
       this.initialized = true;
       this.gl.state = this;
-      installProgramSpy(gl2);
+      installProgramSpy(gl);
       for (const key in GL_HOOKED_SETTERS) {
         const setter = GL_HOOKED_SETTERS[key];
-        installSetterSpy(gl2, key, setter);
+        installSetterSpy(gl, key, setter);
       }
-      installGetterOverride(gl2, "getParameter");
-      installGetterOverride(gl2, "isEnabled");
+      installGetterOverride(gl, "getParameter");
+      installGetterOverride(gl, "isEnabled");
     }
     /**
     // interceptor for context set functions - update our cache and our stack
@@ -26959,13 +26959,13 @@ ${fragment}
       return { valueChanged, oldValue };
     }
   }
-  function installGetterOverride(gl2, functionName) {
-    const originalGetterFunc = gl2[functionName].bind(gl2);
-    gl2[functionName] = function get(pname) {
+  function installGetterOverride(gl, functionName) {
+    const originalGetterFunc = gl[functionName].bind(gl);
+    gl[functionName] = function get(pname) {
       if (pname === void 0 || NON_CACHE_PARAMETERS.has(pname)) {
         return originalGetterFunc(pname);
       }
-      const glState = WebGLStateTracker.get(gl2);
+      const glState = WebGLStateTracker.get(gl);
       if (!(pname in glState.cache)) {
         glState.cache[pname] = originalGetterFunc(pname);
       }
@@ -26977,33 +26977,33 @@ ${fragment}
         originalGetterFunc(pname)
       );
     };
-    Object.defineProperty(gl2[functionName], "name", {
+    Object.defineProperty(gl[functionName], "name", {
       value: `${functionName}-from-cache`,
       configurable: false
     });
   }
-  function installSetterSpy(gl2, functionName, setter) {
-    if (!gl2[functionName]) {
+  function installSetterSpy(gl, functionName, setter) {
+    if (!gl[functionName]) {
       return;
     }
-    const originalSetterFunc = gl2[functionName].bind(gl2);
-    gl2[functionName] = function set(...params) {
-      const glState = WebGLStateTracker.get(gl2);
+    const originalSetterFunc = gl[functionName].bind(gl);
+    gl[functionName] = function set(...params) {
+      const glState = WebGLStateTracker.get(gl);
       const { valueChanged, oldValue } = setter(glState._updateCache, ...params);
       if (valueChanged) {
         originalSetterFunc(...params);
       }
       return oldValue;
     };
-    Object.defineProperty(gl2[functionName], "name", {
+    Object.defineProperty(gl[functionName], "name", {
       value: `${functionName}-to-cache`,
       configurable: false
     });
   }
-  function installProgramSpy(gl2) {
-    const originalUseProgram = gl2.useProgram.bind(gl2);
-    gl2.useProgram = function useProgramLuma(handle) {
-      const glState = WebGLStateTracker.get(gl2);
+  function installProgramSpy(gl) {
+    const originalUseProgram = gl.useProgram.bind(gl);
+    gl.useProgram = function useProgramLuma(handle) {
+      const glState = WebGLStateTracker.get(gl);
       if (glState.program !== handle) {
         originalUseProgram(handle);
         glState.program = handle;
@@ -27017,50 +27017,50 @@ ${fragment}
       // failIfMajorPerformanceCaveat: true,
       ...webglContextAttributes
     };
-    let gl2 = null;
-    gl2 ||= canvas2.getContext("webgl2", webglProps);
+    let gl = null;
+    gl ||= canvas2.getContext("webgl2", webglProps);
     if (webglProps.failIfMajorPerformanceCaveat) {
       errorMessage ||= "Only software GPU is available. Set `failIfMajorPerformanceCaveat: false` to allow.";
     }
-    if (!gl2 && !webglContextAttributes.failIfMajorPerformanceCaveat) {
+    if (!gl && !webglContextAttributes.failIfMajorPerformanceCaveat) {
       webglProps.failIfMajorPerformanceCaveat = false;
-      gl2 = canvas2.getContext("webgl2", webglProps);
-      gl2.luma ||= {};
-      gl2.luma.softwareRenderer = true;
+      gl = canvas2.getContext("webgl2", webglProps);
+      gl.luma ||= {};
+      gl.luma.softwareRenderer = true;
     }
-    if (!gl2) {
-      gl2 = canvas2.getContext("webgl", {});
-      if (gl2) {
-        gl2 = null;
+    if (!gl) {
+      gl = canvas2.getContext("webgl", {});
+      if (gl) {
+        gl = null;
         errorMessage ||= "Your browser only supports WebGL1";
       }
     }
-    if (!gl2) {
+    if (!gl) {
       errorMessage ||= "Your browser does not support WebGL";
       throw new Error(`Failed to create WebGL context: ${errorMessage}`);
     }
     const { onContextLost, onContextRestored } = props;
     canvas2.addEventListener("webglcontextlost", (event) => onContextLost(event), false);
     canvas2.addEventListener("webglcontextrestored", (event) => onContextRestored(event), false);
-    gl2.luma ||= {};
-    return gl2;
+    gl.luma ||= {};
+    return gl;
   }
-  function getWebGLExtension(gl2, name2, extensions) {
+  function getWebGLExtension(gl, name2, extensions) {
     if (extensions[name2] === void 0) {
-      extensions[name2] = gl2.getExtension(name2) || null;
+      extensions[name2] = gl.getExtension(name2) || null;
     }
     return extensions[name2];
   }
-  function getDeviceInfo(gl2, extensions) {
-    const vendorMasked = gl2.getParameter(7936);
-    const rendererMasked = gl2.getParameter(7937);
-    getWebGLExtension(gl2, "WEBGL_debug_renderer_info", extensions);
+  function getDeviceInfo(gl, extensions) {
+    const vendorMasked = gl.getParameter(7936);
+    const rendererMasked = gl.getParameter(7937);
+    getWebGLExtension(gl, "WEBGL_debug_renderer_info", extensions);
     const ext = extensions.WEBGL_debug_renderer_info;
-    const vendorUnmasked = gl2.getParameter(ext ? ext.UNMASKED_VENDOR_WEBGL : 7936);
-    const rendererUnmasked = gl2.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : 7937);
+    const vendorUnmasked = gl.getParameter(ext ? ext.UNMASKED_VENDOR_WEBGL : 7936);
+    const rendererUnmasked = gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : 7937);
     const vendor = vendorUnmasked || vendorMasked;
     const renderer = rendererUnmasked || rendererMasked;
-    const version2 = gl2.getParameter(7938);
+    const version2 = gl.getParameter(7938);
     const gpu = identifyGPUVendor(vendor, renderer);
     const gpuBackend = identifyGPUBackend(vendor, renderer);
     const gpuType = identifyGPUType(vendor, renderer);
@@ -27190,9 +27190,9 @@ ${fragment}
   function isTextureFeature(feature) {
     return feature in TEXTURE_FEATURES;
   }
-  function checkTextureFeature(gl2, feature, extensions) {
+  function checkTextureFeature(gl, feature, extensions) {
     const textureExtensions = TEXTURE_FEATURES[feature] || [];
-    return textureExtensions.every((extension) => getWebGLExtension(gl2, extension, extensions));
+    return textureExtensions.every((extension) => getWebGLExtension(gl, extension, extensions));
   }
   const WEBGL_TEXTURE_FORMATS = {
     // 8-bit formats
@@ -27341,14 +27341,14 @@ ${fragment}
     "atc-rgba-unorm-webgl": { gl: 35986 },
     "atc-rgbai-unorm-webgl": { gl: 34798 }
   };
-  function getTextureFormatCapabilitiesWebGL(gl2, formatSupport, extensions) {
+  function getTextureFormatCapabilitiesWebGL(gl, formatSupport, extensions) {
     let supported = formatSupport.create;
     const webglFormatInfo = WEBGL_TEXTURE_FORMATS[formatSupport.format];
     if (webglFormatInfo?.gl === void 0) {
       supported = false;
     }
     if (webglFormatInfo?.x) {
-      supported = supported && Boolean(getWebGLExtension(gl2, webglFormatInfo.x, extensions));
+      supported = supported && Boolean(getWebGLExtension(gl, webglFormatInfo.x, extensions));
     }
     return {
       format: formatSupport.format,
@@ -27441,11 +27441,11 @@ ${fragment}
     gl;
     extensions;
     testedFeatures = /* @__PURE__ */ new Set();
-    constructor(gl2, extensions, disabledFeatures) {
+    constructor(gl, extensions, disabledFeatures) {
       super([], disabledFeatures);
-      this.gl = gl2;
+      this.gl = gl;
       this.extensions = extensions;
-      getWebGLExtension(gl2, "EXT_color_buffer_float", extensions);
+      getWebGLExtension(gl, "EXT_color_buffer_float", extensions);
     }
     *[Symbol.iterator]() {
       const features = this.getFeatures();
@@ -27585,9 +27585,9 @@ ${fragment}
     // PRIVATE
     gl;
     limits = {};
-    constructor(gl2) {
+    constructor(gl) {
       super();
-      this.gl = gl2;
+      this.gl = gl;
     }
     getParameter(parameter) {
       if (this.limits[parameter] === void 0) {
@@ -27661,27 +27661,27 @@ ${fragment}
      * @param level = 0 - mipmapLevel
      */
     _attachTextureView(attachment, textureView) {
-      const { gl: gl2 } = this.device;
+      const { gl } = this.device;
       const { texture } = textureView;
       const level = textureView.props.baseMipLevel;
       const layer = textureView.props.baseArrayLayer;
-      gl2.bindTexture(texture.glTarget, texture.handle);
+      gl.bindTexture(texture.glTarget, texture.handle);
       switch (texture.glTarget) {
         case 35866:
         case 32879:
-          gl2.framebufferTextureLayer(36160, attachment, texture.handle, level, layer);
+          gl.framebufferTextureLayer(36160, attachment, texture.handle, level, layer);
           break;
         case 34067:
           const face = mapIndexToCubeMapFace(layer);
-          gl2.framebufferTexture2D(36160, attachment, face, texture.handle, level);
+          gl.framebufferTexture2D(36160, attachment, face, texture.handle, level);
           break;
         case 3553:
-          gl2.framebufferTexture2D(36160, attachment, 3553, texture.handle, level);
+          gl.framebufferTexture2D(36160, attachment, 3553, texture.handle, level);
           break;
         default:
           throw new Error("Illegal texture type");
       }
-      gl2.bindTexture(texture.glTarget, null);
+      gl.bindTexture(texture.glTarget, null);
     }
   }
   function mapIndexToCubeMapFace(layer) {
@@ -27954,9 +27954,9 @@ ${fragment}
     async _compile(source2) {
       source2 = source2.startsWith("#version ") ? source2 : `#version 300 es
 ${source2}`;
-      const { gl: gl2 } = this.device;
-      gl2.shaderSource(this.handle, source2);
-      gl2.compileShader(this.handle);
+      const { gl } = this.device;
+      gl.shaderSource(this.handle, source2);
+      gl.compileShader(this.handle);
       if (!this.device.props.debug) {
         this.compilationStatus = "pending";
         return;
@@ -27983,9 +27983,9 @@ ${source2}`;
         await waitMs(DELAY_MS);
         return;
       }
-      const { gl: gl2 } = this.device;
+      const { gl } = this.device;
       for (; ; ) {
-        const complete = gl2.getShaderParameter(this.handle, 37297);
+        const complete = gl.getShaderParameter(this.handle, 37297);
         if (complete) {
           return;
         }
@@ -28017,36 +28017,36 @@ ${source2}`;
   }
   function setDeviceParameters(device, parameters) {
     const webglDevice2 = device;
-    const { gl: gl2 } = webglDevice2;
+    const { gl } = webglDevice2;
     if (parameters.cullMode) {
       switch (parameters.cullMode) {
         case "none":
-          gl2.disable(2884);
+          gl.disable(2884);
           break;
         case "front":
-          gl2.enable(2884);
-          gl2.cullFace(1028);
+          gl.enable(2884);
+          gl.cullFace(1028);
           break;
         case "back":
-          gl2.enable(2884);
-          gl2.cullFace(1029);
+          gl.enable(2884);
+          gl.cullFace(1029);
           break;
       }
     }
     if (parameters.frontFace) {
-      gl2.frontFace(map$1("frontFace", parameters.frontFace, {
+      gl.frontFace(map$1("frontFace", parameters.frontFace, {
         ccw: 2305,
         cw: 2304
       }));
     }
     if (parameters.unclippedDepth) {
       if (device.features.has("depth-clip-control")) {
-        gl2.enable(34383);
+        gl.enable(34383);
       }
     }
     if (parameters.depthBias !== void 0) {
-      gl2.enable(32823);
-      gl2.polygonOffset(parameters.depthBias, parameters.depthBiasSlopeScale || 0);
+      gl.enable(32823);
+      gl.polygonOffset(parameters.depthBias, parameters.depthBiasSlopeScale || 0);
     }
     if (parameters.provokingVertex) {
       if (device.features.has("provoking-vertex-webgl")) {
@@ -28072,47 +28072,47 @@ ${source2}`;
           ext?.polygonModeWEBGL(1029, mode);
         }
         if (parameters.polygonOffsetLine) {
-          gl2.enable(10754);
+          gl.enable(10754);
         }
       }
     }
     if (device.features.has("shader-clip-cull-distance-webgl")) {
       if (parameters.clipDistance0) {
-        gl2.enable(12288);
+        gl.enable(12288);
       }
       if (parameters.clipDistance1) {
-        gl2.enable(12289);
+        gl.enable(12289);
       }
       if (parameters.clipDistance2) {
-        gl2.enable(12290);
+        gl.enable(12290);
       }
       if (parameters.clipDistance3) {
-        gl2.enable(12291);
+        gl.enable(12291);
       }
       if (parameters.clipDistance4) {
-        gl2.enable(12292);
+        gl.enable(12292);
       }
       if (parameters.clipDistance5) {
-        gl2.enable(12293);
+        gl.enable(12293);
       }
       if (parameters.clipDistance6) {
-        gl2.enable(12294);
+        gl.enable(12294);
       }
       if (parameters.clipDistance7) {
-        gl2.enable(12295);
+        gl.enable(12295);
       }
     }
     if (parameters.depthWriteEnabled !== void 0) {
-      gl2.depthMask(mapBoolean("depthWriteEnabled", parameters.depthWriteEnabled));
+      gl.depthMask(mapBoolean("depthWriteEnabled", parameters.depthWriteEnabled));
     }
     if (parameters.depthCompare) {
-      parameters.depthCompare !== "always" ? gl2.enable(2929) : gl2.disable(2929);
-      gl2.depthFunc(convertCompareFunction("depthCompare", parameters.depthCompare));
+      parameters.depthCompare !== "always" ? gl.enable(2929) : gl.disable(2929);
+      gl.depthFunc(convertCompareFunction("depthCompare", parameters.depthCompare));
     }
     if (parameters.stencilWriteMask) {
       const mask = parameters.stencilWriteMask;
-      gl2.stencilMaskSeparate(1028, mask);
-      gl2.stencilMaskSeparate(1029, mask);
+      gl.stencilMaskSeparate(1028, mask);
+      gl.stencilMaskSeparate(1029, mask);
     }
     if (parameters.stencilReadMask) {
       log.warn("stencilReadMask not supported under WebGL");
@@ -28120,34 +28120,34 @@ ${source2}`;
     if (parameters.stencilCompare) {
       const mask = parameters.stencilReadMask || 4294967295;
       const glValue = convertCompareFunction("depthCompare", parameters.stencilCompare);
-      parameters.stencilCompare !== "always" ? gl2.enable(2960) : gl2.disable(2960);
-      gl2.stencilFuncSeparate(1028, glValue, 0, mask);
-      gl2.stencilFuncSeparate(1029, glValue, 0, mask);
+      parameters.stencilCompare !== "always" ? gl.enable(2960) : gl.disable(2960);
+      gl.stencilFuncSeparate(1028, glValue, 0, mask);
+      gl.stencilFuncSeparate(1029, glValue, 0, mask);
     }
     if (parameters.stencilPassOperation && parameters.stencilFailOperation && parameters.stencilDepthFailOperation) {
       const dppass = convertStencilOperation("stencilPassOperation", parameters.stencilPassOperation);
       const sfail = convertStencilOperation("stencilFailOperation", parameters.stencilFailOperation);
       const dpfail = convertStencilOperation("stencilDepthFailOperation", parameters.stencilDepthFailOperation);
-      gl2.stencilOpSeparate(1028, sfail, dpfail, dppass);
-      gl2.stencilOpSeparate(1029, sfail, dpfail, dppass);
+      gl.stencilOpSeparate(1028, sfail, dpfail, dppass);
+      gl.stencilOpSeparate(1029, sfail, dpfail, dppass);
     }
     switch (parameters.blend) {
       case true:
-        gl2.enable(3042);
+        gl.enable(3042);
         break;
       case false:
-        gl2.disable(3042);
+        gl.disable(3042);
         break;
     }
     if (parameters.blendColorOperation || parameters.blendAlphaOperation) {
       const colorEquation = convertBlendOperationToEquation("blendColorOperation", parameters.blendColorOperation || "add");
       const alphaEquation = convertBlendOperationToEquation("blendAlphaOperation", parameters.blendAlphaOperation || "add");
-      gl2.blendEquationSeparate(colorEquation, alphaEquation);
+      gl.blendEquationSeparate(colorEquation, alphaEquation);
       const colorSrcFactor = convertBlendFactorToFunction("blendColorSrcFactor", parameters.blendColorSrcFactor || "one");
       const colorDstFactor = convertBlendFactorToFunction("blendColorDstFactor", parameters.blendColorDstFactor || "zero");
       const alphaSrcFactor = convertBlendFactorToFunction("blendAlphaSrcFactor", parameters.blendAlphaSrcFactor || "one");
       const alphaDstFactor = convertBlendFactorToFunction("blendAlphaDstFactor", parameters.blendAlphaDstFactor || "zero");
-      gl2.blendFuncSeparate(colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor);
+      gl.blendFuncSeparate(colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor);
     }
   }
   function convertCompareFunction(parameter, value) {
@@ -28339,21 +28339,21 @@ ${source2}`;
       }
     }
   }
-  function withGLParameters(gl2, parameters, func) {
+  function withGLParameters(gl, parameters, func) {
     if (isObjectEmpty$1(parameters)) {
-      return func(gl2);
+      return func(gl);
     }
     const { nocatch = true } = parameters;
-    const webglState = WebGLStateTracker.get(gl2);
+    const webglState = WebGLStateTracker.get(gl);
     webglState.push();
-    setGLParameters(gl2, parameters);
+    setGLParameters(gl, parameters);
     let value;
     if (nocatch) {
-      value = func(gl2);
+      value = func(gl);
       webglState.pop();
     } else {
       try {
-        value = func(gl2);
+        value = func(gl);
       } finally {
         webglState.pop();
       }
@@ -28587,21 +28587,21 @@ ${source2}`;
       return this.gl.getParameter(34016) - 33984;
     }
     _bind(_textureUnit) {
-      const { gl: gl2 } = this;
+      const { gl } = this;
       if (_textureUnit !== void 0) {
         this._textureUnit = _textureUnit;
-        gl2.activeTexture(33984 + _textureUnit);
+        gl.activeTexture(33984 + _textureUnit);
       }
-      gl2.bindTexture(this.glTarget, this.handle);
+      gl.bindTexture(this.glTarget, this.handle);
       return _textureUnit;
     }
     _unbind(_textureUnit) {
-      const { gl: gl2 } = this;
+      const { gl } = this;
       if (_textureUnit !== void 0) {
         this._textureUnit = _textureUnit;
-        gl2.activeTexture(33984 + _textureUnit);
+        gl.activeTexture(33984 + _textureUnit);
       }
-      gl2.bindTexture(this.glTarget, null);
+      gl.bindTexture(this.glTarget, null);
       return _textureUnit;
     }
   }
@@ -28701,13 +28701,13 @@ ${source2}`;
     float16: 5131,
     float32: 5126
   };
-  function getShaderLayoutFromGLSL(gl2, program) {
+  function getShaderLayoutFromGLSL(gl, program) {
     const shaderLayout = {
       attributes: [],
       bindings: []
     };
-    shaderLayout.attributes = readAttributeDeclarations(gl2, program);
-    const uniformBlocks = readUniformBlocks(gl2, program);
+    shaderLayout.attributes = readAttributeDeclarations(gl, program);
+    const uniformBlocks = readUniformBlocks(gl, program);
     for (const uniformBlock2 of uniformBlocks) {
       const uniforms2 = uniformBlock2.uniforms.map((uniform) => ({
         name: uniform.name,
@@ -28726,7 +28726,7 @@ ${source2}`;
         uniforms: uniforms2
       });
     }
-    const uniforms = readUniformBindings(gl2, program);
+    const uniforms = readUniformBindings(gl, program);
     let textureUnit = 0;
     for (const uniform of uniforms) {
       if (isGLSamplerType(uniform.type)) {
@@ -28746,17 +28746,17 @@ ${source2}`;
     if (uniforms.length) {
       shaderLayout.uniforms = uniforms;
     }
-    const varyings = readVaryings(gl2, program);
+    const varyings = readVaryings(gl, program);
     if (varyings?.length) {
       shaderLayout.varyings = varyings;
     }
     return shaderLayout;
   }
-  function readAttributeDeclarations(gl2, program) {
+  function readAttributeDeclarations(gl, program) {
     const attributes = [];
-    const count2 = gl2.getProgramParameter(program, 35721);
+    const count2 = gl.getProgramParameter(program, 35721);
     for (let index = 0; index < count2; index++) {
-      const activeInfo = gl2.getActiveAttrib(program, index);
+      const activeInfo = gl.getActiveAttrib(program, index);
       if (!activeInfo) {
         throw new Error("activeInfo");
       }
@@ -28765,7 +28765,7 @@ ${source2}`;
         type: compositeType
         /* , size*/
       } = activeInfo;
-      const location = gl2.getAttribLocation(program, name2);
+      const location = gl.getAttribLocation(program, name2);
       if (location >= 0) {
         const attributeType = convertGLUniformTypeToShaderVariableType(compositeType);
         const stepMode = /instance/i.test(name2) ? "instance" : "vertex";
@@ -28781,11 +28781,11 @@ ${source2}`;
     attributes.sort((a2, b2) => a2.location - b2.location);
     return attributes;
   }
-  function readVaryings(gl2, program) {
+  function readVaryings(gl, program) {
     const varyings = [];
-    const count2 = gl2.getProgramParameter(program, 35971);
+    const count2 = gl.getProgramParameter(program, 35971);
     for (let location = 0; location < count2; location++) {
-      const activeInfo = gl2.getTransformFeedbackVarying(program, location);
+      const activeInfo = gl.getTransformFeedbackVarying(program, location);
       if (!activeInfo) {
         throw new Error("activeInfo");
       }
@@ -28797,17 +28797,17 @@ ${source2}`;
     varyings.sort((a2, b2) => a2.location - b2.location);
     return varyings;
   }
-  function readUniformBindings(gl2, program) {
+  function readUniformBindings(gl, program) {
     const uniforms = [];
-    const uniformCount = gl2.getProgramParameter(program, 35718);
+    const uniformCount = gl.getProgramParameter(program, 35718);
     for (let i2 = 0; i2 < uniformCount; i2++) {
-      const activeInfo = gl2.getActiveUniform(program, i2);
+      const activeInfo = gl.getActiveUniform(program, i2);
       if (!activeInfo) {
         throw new Error("activeInfo");
       }
       const { name: rawName, size, type } = activeInfo;
       const { name: name2, isArray: isArray2 } = parseUniformName(rawName);
-      let webglLocation = gl2.getUniformLocation(program, name2);
+      let webglLocation = gl.getUniformLocation(program, name2);
       const uniformInfo = {
         // WebGL locations are uniquely typed but just numbers
         location: webglLocation,
@@ -28820,7 +28820,7 @@ ${source2}`;
       if (uniformInfo.size > 1) {
         for (let j2 = 0; j2 < uniformInfo.size; j2++) {
           const elementName = `${name2}[${j2}]`;
-          webglLocation = gl2.getUniformLocation(program, elementName);
+          webglLocation = gl.getUniformLocation(program, elementName);
           const arrayElementUniformInfo = {
             ...uniformInfo,
             name: elementName,
@@ -28832,13 +28832,13 @@ ${source2}`;
     }
     return uniforms;
   }
-  function readUniformBlocks(gl2, program) {
-    const getBlockParameter = (blockIndex, pname) => gl2.getActiveUniformBlockParameter(program, blockIndex, pname);
+  function readUniformBlocks(gl, program) {
+    const getBlockParameter = (blockIndex, pname) => gl.getActiveUniformBlockParameter(program, blockIndex, pname);
     const uniformBlocks = [];
-    const blockCount = gl2.getProgramParameter(program, 35382);
+    const blockCount = gl.getProgramParameter(program, 35382);
     for (let blockIndex = 0; blockIndex < blockCount; blockIndex++) {
       const blockInfo = {
-        name: gl2.getActiveUniformBlockName(program, blockIndex) || "",
+        name: gl.getActiveUniformBlockName(program, blockIndex) || "",
         location: getBlockParameter(blockIndex, 35391),
         byteLength: getBlockParameter(blockIndex, 35392),
         vertex: getBlockParameter(blockIndex, 35396),
@@ -28847,12 +28847,12 @@ ${source2}`;
         uniforms: []
       };
       const uniformIndices = getBlockParameter(blockIndex, 35395) || [];
-      const uniformType = gl2.getActiveUniforms(program, uniformIndices, 35383);
-      const uniformArrayLength = gl2.getActiveUniforms(program, uniformIndices, 35384);
-      const uniformOffset = gl2.getActiveUniforms(program, uniformIndices, 35387);
-      const uniformStride = gl2.getActiveUniforms(program, uniformIndices, 35388);
+      const uniformType = gl.getActiveUniforms(program, uniformIndices, 35383);
+      const uniformArrayLength = gl.getActiveUniforms(program, uniformIndices, 35384);
+      const uniformOffset = gl.getActiveUniforms(program, uniformIndices, 35387);
+      const uniformStride = gl.getActiveUniforms(program, uniformIndices, 35388);
       for (let i2 = 0; i2 < blockInfo.uniformCount; ++i2) {
-        const activeInfo = gl2.getActiveUniform(program, uniformIndices[i2]);
+        const activeInfo = gl.getActiveUniform(program, uniformIndices[i2]);
         if (!activeInfo) {
           throw new Error("activeInfo");
         }
@@ -28892,8 +28892,8 @@ ${source2}`;
       isArray: Boolean(matches2[2])
     };
   }
-  function setUniform(gl2, location, type, value) {
-    const gl22 = gl2;
+  function setUniform(gl, location, type, value) {
+    const gl2 = gl;
     let uniformValue = value;
     if (uniformValue === true) {
       uniformValue = 1;
@@ -28921,61 +28921,61 @@ ${source2}`;
         if (typeof value !== "number") {
           throw new Error("samplers must be set to integers");
         }
-        return gl2.uniform1i(location, value);
+        return gl.uniform1i(location, value);
       case 5126:
-        return gl2.uniform1fv(location, arrayValue);
+        return gl.uniform1fv(location, arrayValue);
       case 35664:
-        return gl2.uniform2fv(location, arrayValue);
+        return gl.uniform2fv(location, arrayValue);
       case 35665:
-        return gl2.uniform3fv(location, arrayValue);
+        return gl.uniform3fv(location, arrayValue);
       case 35666:
-        return gl2.uniform4fv(location, arrayValue);
+        return gl.uniform4fv(location, arrayValue);
       case 5124:
-        return gl2.uniform1iv(location, arrayValue);
+        return gl.uniform1iv(location, arrayValue);
       case 35667:
-        return gl2.uniform2iv(location, arrayValue);
+        return gl.uniform2iv(location, arrayValue);
       case 35668:
-        return gl2.uniform3iv(location, arrayValue);
+        return gl.uniform3iv(location, arrayValue);
       case 35669:
-        return gl2.uniform4iv(location, arrayValue);
+        return gl.uniform4iv(location, arrayValue);
       case 35670:
-        return gl2.uniform1iv(location, arrayValue);
+        return gl.uniform1iv(location, arrayValue);
       case 35671:
-        return gl2.uniform2iv(location, arrayValue);
+        return gl.uniform2iv(location, arrayValue);
       case 35672:
-        return gl2.uniform3iv(location, arrayValue);
+        return gl.uniform3iv(location, arrayValue);
       case 35673:
-        return gl2.uniform4iv(location, arrayValue);
+        return gl.uniform4iv(location, arrayValue);
       // WEBGL2 - unsigned integers
       case 5125:
-        return gl22.uniform1uiv(location, arrayValue, 1);
+        return gl2.uniform1uiv(location, arrayValue, 1);
       case 36294:
-        return gl22.uniform2uiv(location, arrayValue, 2);
+        return gl2.uniform2uiv(location, arrayValue, 2);
       case 36295:
-        return gl22.uniform3uiv(location, arrayValue, 3);
+        return gl2.uniform3uiv(location, arrayValue, 3);
       case 36296:
-        return gl22.uniform4uiv(location, arrayValue, 4);
+        return gl2.uniform4uiv(location, arrayValue, 4);
       // WebGL2 - quadratic matrices
       // false: don't transpose the matrix
       case 35674:
-        return gl2.uniformMatrix2fv(location, false, arrayValue);
+        return gl.uniformMatrix2fv(location, false, arrayValue);
       case 35675:
-        return gl2.uniformMatrix3fv(location, false, arrayValue);
+        return gl.uniformMatrix3fv(location, false, arrayValue);
       case 35676:
-        return gl2.uniformMatrix4fv(location, false, arrayValue);
+        return gl.uniformMatrix4fv(location, false, arrayValue);
       // WebGL2 - rectangular matrices
       case 35685:
-        return gl22.uniformMatrix2x3fv(location, false, arrayValue);
+        return gl2.uniformMatrix2x3fv(location, false, arrayValue);
       case 35686:
-        return gl22.uniformMatrix2x4fv(location, false, arrayValue);
+        return gl2.uniformMatrix2x4fv(location, false, arrayValue);
       case 35687:
-        return gl22.uniformMatrix3x2fv(location, false, arrayValue);
+        return gl2.uniformMatrix3x2fv(location, false, arrayValue);
       case 35688:
-        return gl22.uniformMatrix3x4fv(location, false, arrayValue);
+        return gl2.uniformMatrix3x4fv(location, false, arrayValue);
       case 35689:
-        return gl22.uniformMatrix4x2fv(location, false, arrayValue);
+        return gl2.uniformMatrix4x2fv(location, false, arrayValue);
       case 35690:
-        return gl22.uniformMatrix4x3fv(location, false, arrayValue);
+        return gl2.uniformMatrix4x3fv(location, false, arrayValue);
     }
     throw new Error("Illegal uniform");
   }
@@ -29166,11 +29166,11 @@ ${source2}`;
     // setAttributes(attributes: Record<string, Buffer>): void {}
     // setBindings(bindings: Record<string, Binding>): void {}
     async _linkShaders() {
-      const { gl: gl2 } = this.device;
-      gl2.attachShader(this.handle, this.vs.handle);
-      gl2.attachShader(this.handle, this.fs.handle);
+      const { gl } = this.device;
+      gl.attachShader(this.handle, this.vs.handle);
+      gl.attachShader(this.handle, this.fs.handle);
       log.time(LOG_PROGRAM_PERF_PRIORITY, `linkProgram for ${this.id}`)();
-      gl2.linkProgram(this.handle);
+      gl.linkProgram(this.handle);
       log.timeEnd(LOG_PROGRAM_PERF_PRIORITY, `linkProgram for ${this.id}`)();
       if (log.level === 0) ;
       if (!this.device.features.has("compilation-status-async-webgl")) {
@@ -29220,14 +29220,14 @@ ${source2}`;
      * https://gamedev.stackexchange.com/questions/30429/how-to-detect-glsl-warnings
      */
     _getLinkStatus() {
-      const { gl: gl2 } = this.device;
-      const linked = gl2.getProgramParameter(this.handle, 35714);
+      const { gl } = this.device;
+      const linked = gl.getProgramParameter(this.handle, 35714);
       if (!linked) {
         this.linkStatus = "error";
         return "link-error";
       }
-      gl2.validateProgram(this.handle);
-      const validated = gl2.getProgramParameter(this.handle, 35715);
+      gl.validateProgram(this.handle);
+      const validated = gl.getProgramParameter(this.handle, 35715);
       if (!validated) {
         this.linkStatus = "error";
         return "validation-error";
@@ -29243,9 +29243,9 @@ ${source2}`;
         await waitMs(DELAY_MS);
         return;
       }
-      const { gl: gl2 } = this.device;
+      const { gl } = this.device;
       for (; ; ) {
-        const complete = gl2.getProgramParameter(this.handle, 37297);
+        const complete = gl.getProgramParameter(this.handle, 37297);
         if (complete) {
           return;
         }
@@ -29272,8 +29272,8 @@ ${source2}`;
       if (this.linkStatus !== "success") {
         return;
       }
-      const { gl: gl2 } = this.device;
-      gl2.useProgram(this.handle);
+      const { gl } = this.device;
+      gl.useProgram(this.handle);
       let textureUnit = 0;
       let uniformBufferIndex = 0;
       for (const binding of this.shaderLayout.bindings) {
@@ -29284,15 +29284,15 @@ ${source2}`;
         switch (binding.type) {
           case "uniform":
             const { name: name2 } = binding;
-            const location = gl2.getUniformBlockIndex(this.handle, name2);
+            const location = gl.getUniformBlockIndex(this.handle, name2);
             if (location === 4294967295) {
               throw new Error(`Invalid uniform block name ${name2}`);
             }
-            gl2.uniformBlockBinding(this.handle, uniformBufferIndex, location);
+            gl.uniformBlockBinding(this.handle, uniformBufferIndex, location);
             if (value instanceof WEBGLBuffer) {
-              gl2.bindBufferBase(35345, uniformBufferIndex, value.handle);
+              gl.bindBufferBase(35345, uniformBufferIndex, value.handle);
             } else {
-              gl2.bindBufferRange(
+              gl.bindBufferRange(
                 35345,
                 uniformBufferIndex,
                 // @ts-expect-error
@@ -29320,8 +29320,8 @@ ${source2}`;
             } else {
               throw new Error("No texture");
             }
-            gl2.activeTexture(33984 + textureUnit);
-            gl2.bindTexture(texture.glTarget, texture.handle);
+            gl.activeTexture(33984 + textureUnit);
+            gl.bindTexture(texture.glTarget, texture.handle);
             textureUnit += 1;
             break;
           case "sampler":
@@ -30295,7 +30295,7 @@ ${source2}`;
       sourceType
     } = options || {};
     const { framebuffer, deleteFramebuffer } = getFramebuffer$1(source2);
-    const { gl: gl2, handle } = framebuffer;
+    const { gl, handle } = framebuffer;
     sourceWidth ||= framebuffer.width;
     sourceHeight ||= framebuffer.height;
     const texture = framebuffer.colorAttachments[sourceAttachment]?.texture;
@@ -30308,11 +30308,11 @@ ${source2}`;
     target = getPixelArray(target, sourceType, sourceFormat, sourceWidth, sourceHeight);
     const signedType = getDataType(target);
     sourceType = sourceType || convertDataTypeToGLDataType(signedType);
-    const prevHandle = gl2.bindFramebuffer(36160, handle);
-    gl2.readBuffer(36064 + sourceAttachment);
-    gl2.readPixels(sourceX, sourceY, sourceWidth, sourceHeight, sourceFormat, sourceType, target);
-    gl2.readBuffer(36064);
-    gl2.bindFramebuffer(36160, prevHandle || null);
+    const prevHandle = gl.bindFramebuffer(36160, handle);
+    gl.readBuffer(36064 + sourceAttachment);
+    gl.readPixels(sourceX, sourceY, sourceWidth, sourceHeight, sourceFormat, sourceType, target);
+    gl.readBuffer(36064);
+    gl.bindFramebuffer(36160, prevHandle || null);
     if (deleteFramebuffer) {
       framebuffer.destroy();
     }
@@ -30440,7 +30440,7 @@ ${source2}`;
         webglContextAttributes.powerPreference = props.powerPreference;
       }
       const externalGLContext = this.props._handle;
-      const gl2 = externalGLContext || createBrowserContext(this.canvasContext.canvas, {
+      const gl = externalGLContext || createBrowserContext(this.canvasContext.canvas, {
         onContextLost: (event) => this._resolveContextLost?.({
           reason: "destroyed",
           message: "Entered sleep mode, or too many apps or browser tabs are using the GPU."
@@ -30448,10 +30448,10 @@ ${source2}`;
         // eslint-disable-next-line no-console
         onContextRestored: (event) => console.log("WebGL context restored")
       }, webglContextAttributes);
-      if (!gl2) {
+      if (!gl) {
         throw new Error("WebGL context creation failed");
       }
-      device = gl2.device;
+      device = gl.device;
       if (device) {
         if (props._reuseDevices) {
           log.log(1, `Not creating a new Device, instead returning a reference to Device ${device.id} already attached to WebGL context`, device)();
@@ -30460,8 +30460,8 @@ ${source2}`;
         }
         throw new Error(`WebGL context already attached to device ${device.id}`);
       }
-      this.handle = gl2;
-      this.gl = gl2;
+      this.handle = gl;
+      this.gl = gl;
       this.spectorJS = initializeSpectorJS({ ...this.props, gl: this.handle });
       this.gl.device = this;
       this.gl._version = 2;
@@ -31194,7 +31194,7 @@ ${source2}`;
       const {
         // width,
         // height,
-        gl: gl2,
+        gl,
         // debug,
         onError
         // onBeforeRender,
@@ -31203,7 +31203,7 @@ ${source2}`;
       return new AnimationLoop({
         device: deviceOrPromise,
         // TODO v9
-        autoResizeDrawingBuffer: !gl2,
+        autoResizeDrawingBuffer: !gl,
         // do not auto resize external context
         autoResizeViewport: false,
         // @ts-expect-error luma.gl needs to accept Promise<void> return value
@@ -31391,8 +31391,8 @@ ${source2}`;
     }
     /** Internal only: default render function (redraw all layers and views) */
     _drawLayers(redrawReason, renderOptions) {
-      const { device, gl: gl2 } = this.layerManager.context;
-      this.props.onBeforeRender({ device, gl: gl2 });
+      const { device, gl } = this.layerManager.context;
+      this.props.onBeforeRender({ device, gl });
       const opts = {
         target: this.props._framebuffer,
         layers: this.layerManager.getLayers(),
@@ -31410,7 +31410,7 @@ ${source2}`;
           layers: opts.layers
         });
       }
-      this.props.onAfterRender({ device, gl: gl2 });
+      this.props.onAfterRender({ device, gl });
     }
     // Callbacks
     _onRenderFrame() {
@@ -35265,23 +35265,28 @@ void main(void) {
   }
   CompositeLayer.layerName = "CompositeLayer";
   class MapglMercatorViewport extends WebMercatorViewport {
-    constructor(map2) {
-      const [width, height] = map2.getSize();
-      super(
-        Object.assign(
-          {
-            id: "2gis",
-            x: 0,
-            y: 0,
-            width,
-            height
-          },
-          getViewState(map2),
-          {
-            nearZMultiplier: 1 / (height || 1)
-          }
-        )
-      );
+    constructor(mapOrProps) {
+      if (typeof mapOrProps.getSize === "function") {
+        const map2 = mapOrProps;
+        const [width, height] = map2.getSize();
+        super(
+          Object.assign(
+            {
+              id: "2gis",
+              x: 0,
+              y: 0,
+              width,
+              height
+            },
+            getViewState(map2),
+            {
+              nearZMultiplier: 1 / (height || 1)
+            }
+          )
+        );
+      } else {
+        super({ id: "2gis", ...mapOrProps });
+      }
     }
     get projectionMode() {
       return 4;
@@ -35396,66 +35401,66 @@ void main(void) {
     hasRequiredSavestate = 1;
     savestate = createGLStateStack;
     var uniq2 = requireUniq();
-    function createGLStateStack(gl2, variables) {
+    function createGLStateStack(gl, variables) {
       if (!variables) {
         variables = [
-          gl2.ACTIVE_TEXTURE,
-          gl2.ARRAY_BUFFER_BINDING,
-          gl2.BLEND,
-          gl2.BLEND_COLOR,
-          gl2.BLEND_SRC_ALPHA,
-          gl2.BLEND_SRC_RGB,
-          gl2.BLEND_DST_ALPHA,
-          gl2.BLEND_DST_RGB,
-          gl2.BLEND_EQUATION_ALPHA,
-          gl2.BLEND_EQUATION_RGB,
-          gl2.COLOR_WRITEMASK,
-          gl2.COLOR_CLEAR_VALUE,
-          gl2.CULL_FACE,
-          gl2.CULL_FACE_MODE,
-          gl2.CURRENT_PROGRAM,
-          gl2.DEPTH_CLEAR_VALUE,
-          gl2.DEPTH_FUNC,
-          gl2.DEPTH_RANGE,
-          gl2.DEPTH_WRITEMASK,
-          gl2.DITHER,
-          gl2.ELEMENT_ARRAY_BUFFER_BINDING,
-          gl2.FRAMEBUFFER_BINDING,
-          gl2.FRONT_FACE,
-          gl2.GENERATE_MIPMAP_HINT,
-          gl2.LINE_WIDTH,
-          gl2.PACK_ALIGNMENT,
-          gl2.POLYGON_OFFSET_FACTOR,
-          gl2.POLYGON_OFFSET_FILL,
-          gl2.POLYGON_OFFSET_UNITS,
-          gl2.RENDERBUFFER_BINDING,
-          gl2.SAMPLE_COVERAGE,
-          gl2.SAMPLE_COVERAGE_INVERT,
-          gl2.SAMPLE_COVERAGE_VALUE,
-          gl2.SCISSOR_BOX,
-          gl2.SCISSOR_TEST,
-          gl2.STENCIL_BACK_FAIL,
-          gl2.STENCIL_BACK_FUNC,
-          gl2.STENCIL_BACK_PASS_DEPTH_FAIL,
-          gl2.STENCIL_BACK_PASS_DEPTH_PASS,
-          gl2.STENCIL_BACK_REF,
-          gl2.STENCIL_BACK_VALUE_MASK,
-          gl2.STENCIL_BACK_WRITEMASK,
-          gl2.STENCIL_CLEAR_VALUE,
-          gl2.STENCIL_FAIL,
-          gl2.STENCIL_FUNC,
-          gl2.STENCIL_PASS_DEPTH_FAIL,
-          gl2.STENCIL_PASS_DEPTH_PASS,
-          gl2.STENCIL_REF,
-          gl2.STENCIL_TEST,
-          gl2.STENCIL_VALUE_MASK,
-          gl2.STENCIL_WRITEMASK,
-          gl2.TEXTURE,
-          gl2.UNPACK_ALIGNMENT,
-          gl2.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-          gl2.UNPACK_FLIP_Y_WEBGL,
-          gl2.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
-          gl2.VIEWPORT
+          gl.ACTIVE_TEXTURE,
+          gl.ARRAY_BUFFER_BINDING,
+          gl.BLEND,
+          gl.BLEND_COLOR,
+          gl.BLEND_SRC_ALPHA,
+          gl.BLEND_SRC_RGB,
+          gl.BLEND_DST_ALPHA,
+          gl.BLEND_DST_RGB,
+          gl.BLEND_EQUATION_ALPHA,
+          gl.BLEND_EQUATION_RGB,
+          gl.COLOR_WRITEMASK,
+          gl.COLOR_CLEAR_VALUE,
+          gl.CULL_FACE,
+          gl.CULL_FACE_MODE,
+          gl.CURRENT_PROGRAM,
+          gl.DEPTH_CLEAR_VALUE,
+          gl.DEPTH_FUNC,
+          gl.DEPTH_RANGE,
+          gl.DEPTH_WRITEMASK,
+          gl.DITHER,
+          gl.ELEMENT_ARRAY_BUFFER_BINDING,
+          gl.FRAMEBUFFER_BINDING,
+          gl.FRONT_FACE,
+          gl.GENERATE_MIPMAP_HINT,
+          gl.LINE_WIDTH,
+          gl.PACK_ALIGNMENT,
+          gl.POLYGON_OFFSET_FACTOR,
+          gl.POLYGON_OFFSET_FILL,
+          gl.POLYGON_OFFSET_UNITS,
+          gl.RENDERBUFFER_BINDING,
+          gl.SAMPLE_COVERAGE,
+          gl.SAMPLE_COVERAGE_INVERT,
+          gl.SAMPLE_COVERAGE_VALUE,
+          gl.SCISSOR_BOX,
+          gl.SCISSOR_TEST,
+          gl.STENCIL_BACK_FAIL,
+          gl.STENCIL_BACK_FUNC,
+          gl.STENCIL_BACK_PASS_DEPTH_FAIL,
+          gl.STENCIL_BACK_PASS_DEPTH_PASS,
+          gl.STENCIL_BACK_REF,
+          gl.STENCIL_BACK_VALUE_MASK,
+          gl.STENCIL_BACK_WRITEMASK,
+          gl.STENCIL_CLEAR_VALUE,
+          gl.STENCIL_FAIL,
+          gl.STENCIL_FUNC,
+          gl.STENCIL_PASS_DEPTH_FAIL,
+          gl.STENCIL_PASS_DEPTH_PASS,
+          gl.STENCIL_REF,
+          gl.STENCIL_TEST,
+          gl.STENCIL_VALUE_MASK,
+          gl.STENCIL_WRITEMASK,
+          gl.TEXTURE,
+          gl.UNPACK_ALIGNMENT,
+          gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+          gl.UNPACK_FLIP_Y_WEBGL,
+          gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+          gl.VIEWPORT
         ];
       }
       var ctorBody = [
@@ -35473,49 +35478,49 @@ void main(void) {
       });
       uniq2(nvariables, void 0, true);
       var textureTypes = [
-        gl2.TEXTURE,
-        gl2.TEXTURE_2D,
-        gl2.TEXTURE_CUBE_MAP,
-        gl2.TEXTURE_BINDING_2D,
-        gl2.TEXTURE_BINDING_CUBE_MAP
+        gl.TEXTURE,
+        gl.TEXTURE_2D,
+        gl.TEXTURE_CUBE_MAP,
+        gl.TEXTURE_BINDING_2D,
+        gl.TEXTURE_BINDING_CUBE_MAP
       ];
       if (textureTypes.some(function(v2) {
         return nvariables.indexOf(v2) >= 0;
       })) {
-        var numTextures = gl2.getParameter(gl2.MAX_TEXTURE_IMAGE_UNITS);
+        var numTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
         ctorBody.push("this.textures=[];");
-        pushBody.push("var curTex=gl.getParameter(", gl2.ACTIVE_TEXTURE, "),texState=new Array(", numTextures, ");");
+        pushBody.push("var curTex=gl.getParameter(", gl.ACTIVE_TEXTURE, "),texState=new Array(", numTextures, ");");
         for (var i2 = 0; i2 < numTextures; ++i2) {
           pushBody.push(
             "gl.activeTexture(",
-            gl2.TEXTURE0 + i2,
+            gl.TEXTURE0 + i2,
             ");texState[",
             i2,
             "]=[gl.getParameter(",
-            gl2.TEXTURE_BINDING_2D,
+            gl.TEXTURE_BINDING_2D,
             "),gl.getParameter(",
-            gl2.TEXTURE_BINDING_CUBE_MAP,
+            gl.TEXTURE_BINDING_CUBE_MAP,
             ")];"
           );
         }
         pushBody.push("this.textures.push(texState);gl.activeTexture(curTex);");
         popBody.push("var texState=this.textures.pop();");
-        var restoreActive = nvariables.indexOf(gl2.ACTIVE_TEXTURE) < 0;
+        var restoreActive = nvariables.indexOf(gl.ACTIVE_TEXTURE) < 0;
         if (restoreActive) {
-          popBody.push("var curTex=gl.getParameter(", gl2.ACTIVE_TEXTURE, ");");
+          popBody.push("var curTex=gl.getParameter(", gl.ACTIVE_TEXTURE, ");");
         }
         for (var i2 = 0; i2 < numTextures; ++i2) {
           popBody.push(
             "gl.activeTexture(",
-            gl2.TEXTURE0 + i2,
+            gl.TEXTURE0 + i2,
             ");",
             "gl.bindTexture(",
-            gl2.TEXTURE_2D,
+            gl.TEXTURE_2D,
             ",texState[",
             i2,
             "][0]);",
             "gl.bindTexture(",
-            gl2.TEXTURE_CUBE_MAP,
+            gl.TEXTURE_CUBE_MAP,
             ",texState[",
             i2,
             "][1]);"
@@ -35527,42 +35532,42 @@ void main(void) {
       }
       var specialVars = {
         blendEquationSeparate: [
-          gl2.BLEND_EQUATION_ALPHA,
-          gl2.BLEND_EQUATION_RGB
+          gl.BLEND_EQUATION_ALPHA,
+          gl.BLEND_EQUATION_RGB
         ],
         blendFuncSeparate: [
-          gl2.BLEND_SRC_RGB,
-          gl2.BLEND_DST_RGB,
-          gl2.BLEND_SRC_ALPHA,
-          gl2.BLEND_DST_ALPHA
+          gl.BLEND_SRC_RGB,
+          gl.BLEND_DST_RGB,
+          gl.BLEND_SRC_ALPHA,
+          gl.BLEND_DST_ALPHA
         ],
         sampleCoverage: [
-          gl2.SAMPLE_COVERAGE_INVERT,
-          gl2.SAMPLE_COVERAGE_VALUE
+          gl.SAMPLE_COVERAGE_INVERT,
+          gl.SAMPLE_COVERAGE_VALUE
         ],
         polygonOffset: [
-          gl2.POLYGON_OFFSET_FACTOR,
-          gl2.POLYGON_OFFSET_UNITS
+          gl.POLYGON_OFFSET_FACTOR,
+          gl.POLYGON_OFFSET_UNITS
         ],
         stencilFuncSeparate_FRONT: [
-          gl2.STENCIL_FUNC,
-          gl2.STENCIL_REF,
-          gl2.STENCIL_VALUE_MASK
+          gl.STENCIL_FUNC,
+          gl.STENCIL_REF,
+          gl.STENCIL_VALUE_MASK
         ],
         stencilFuncSeparate_BACK: [
-          gl2.STENCIL_BACK_FUNC,
-          gl2.STENCIL_BACK_REF,
-          gl2.STENCIL_BACK_VALUE_MASK
+          gl.STENCIL_BACK_FUNC,
+          gl.STENCIL_BACK_REF,
+          gl.STENCIL_BACK_VALUE_MASK
         ],
         stencilOpSeparate_FRONT: [
-          gl2.STENCIL_FAIL,
-          gl2.STENCIL_PASS_DEPTH_FAIL,
-          gl2.STENCIL_PASS_DEPTH_PASS
+          gl.STENCIL_FAIL,
+          gl.STENCIL_PASS_DEPTH_FAIL,
+          gl.STENCIL_PASS_DEPTH_PASS
         ],
         stencilOpSeparate_BACK: [
-          gl2.STENCIL_BACK_FAIL,
-          gl2.STENCIL_BACK_PASS_DEPTH_FAIL,
-          gl2.STENCIL_BACK_PASS_DEPTH_PASS
+          gl.STENCIL_BACK_FAIL,
+          gl.STENCIL_BACK_PASS_DEPTH_FAIL,
+          gl.STENCIL_BACK_PASS_DEPTH_PASS
         ]
       };
       for (var id in specialVars) {
@@ -35591,8 +35596,8 @@ void main(void) {
           var stateStack = "this[" + type + "]";
           ctorBody.push(stateStack, "=[];");
           switch (type) {
-            case gl2.SAMPLE_COVERAGE:
-              pushBody.push(stateStack, ".push(gl.isEnabled(", gl2.SAMPLE_COVERAGE, "));");
+            case gl.SAMPLE_COVERAGE:
+              pushBody.push(stateStack, ".push(gl.isEnabled(", gl.SAMPLE_COVERAGE, "));");
               break;
             default:
               pushBody.push(stateStack, ".push(gl.getParameter(", type, "));");
@@ -35600,90 +35605,90 @@ void main(void) {
           }
           var sv = stateStack + ".pop()";
           switch (type) {
-            case gl2.ACTIVE_TEXTURE:
+            case gl.ACTIVE_TEXTURE:
               popBody.push("gl.activeTexture(", sv, ");");
               break;
-            case gl2.ARRAY_BUFFER_BINDING:
-              popBody.push("gl.bindBuffer(", gl2.ARRAY_BUFFER, ",", sv, ");");
+            case gl.ARRAY_BUFFER_BINDING:
+              popBody.push("gl.bindBuffer(", gl.ARRAY_BUFFER, ",", sv, ");");
               break;
-            case gl2.BLEND_COLOR:
+            case gl.BLEND_COLOR:
               popBody.push("var c=", sv, ";gl.blendColor(c[0], c[1], c[2], c[3]);");
               break;
-            case gl2.COLOR_CLEAR_VALUE:
+            case gl.COLOR_CLEAR_VALUE:
               popBody.push("var c=", sv, ";gl.clearColor(c[0], c[1], c[2], c[3]);");
               break;
-            case gl2.COLOR_WRITEMASK:
+            case gl.COLOR_WRITEMASK:
               popBody.push("var c=", sv, ";gl.colorMask(c[0], c[1], c[2], c[3]);");
               break;
-            case gl2.CULL_FACE_MODE:
+            case gl.CULL_FACE_MODE:
               popBody.push("gl.cullFace(", sv, ");");
               break;
-            case gl2.CURRENT_PROGRAM:
+            case gl.CURRENT_PROGRAM:
               popBody.push("gl.useProgram(", sv, ");");
               break;
-            case gl2.DEPTH_CLEAR_VALUE:
+            case gl.DEPTH_CLEAR_VALUE:
               popBody.push("gl.clearDepth(", sv, ");");
               break;
-            case gl2.DEPTH_FUNC:
+            case gl.DEPTH_FUNC:
               popBody.push("gl.depthFunc(", sv, ");");
               break;
-            case gl2.DEPTH_RANGE:
+            case gl.DEPTH_RANGE:
               popBody.push("var z=", sv, ";gl.depthRange(z[0], z[1]);");
               break;
-            case gl2.DEPTH_WRITEMASK:
+            case gl.DEPTH_WRITEMASK:
               popBody.push("gl.depthMask(", sv, ");");
               break;
-            case gl2.ELEMENT_ARRAY_BUFFER_BINDING:
-              popBody.push("gl.bindBuffer(", gl2.ELEMENT_ARRAY_BUFFER, ",", sv, ");");
+            case gl.ELEMENT_ARRAY_BUFFER_BINDING:
+              popBody.push("gl.bindBuffer(", gl.ELEMENT_ARRAY_BUFFER, ",", sv, ");");
               break;
-            case gl2.FRAMEBUFFER_BINDING:
-              popBody.push("gl.bindFramebuffer(", gl2.FRAMEBUFFER, ",", sv, ");");
+            case gl.FRAMEBUFFER_BINDING:
+              popBody.push("gl.bindFramebuffer(", gl.FRAMEBUFFER, ",", sv, ");");
               break;
-            case gl2.FRONT_FACE:
+            case gl.FRONT_FACE:
               popBody.push("gl.frontFace(", sv, ");");
               break;
-            case gl2.LINE_WIDTH:
+            case gl.LINE_WIDTH:
               popBody.push("gl.lineWidth(", sv, ");");
               break;
-            case gl2.RENDERBUFFER_BINDING:
-              popBody.push("gl.bindRenderbuffer(", gl2.RENDERBUFFER, ",", sv, ");");
+            case gl.RENDERBUFFER_BINDING:
+              popBody.push("gl.bindRenderbuffer(", gl.RENDERBUFFER, ",", sv, ");");
               break;
-            case gl2.SCISSOR_BOX:
+            case gl.SCISSOR_BOX:
               popBody.push("var c=", sv, ";gl.scissor(c[0],c[1],c[2],c[3]);");
               break;
-            case gl2.STENCIL_WRITEMASK:
-              popBody.push("gl.stencilMaskSeparate(", gl2.FRONT, ",", sv, ");");
+            case gl.STENCIL_WRITEMASK:
+              popBody.push("gl.stencilMaskSeparate(", gl.FRONT, ",", sv, ");");
               break;
-            case gl2.STENCIL_BACK_WRITEMASK:
-              popBody.push("gl.stencilMaskSeparate(", gl2.BACK, ",", sv, ");");
+            case gl.STENCIL_BACK_WRITEMASK:
+              popBody.push("gl.stencilMaskSeparate(", gl.BACK, ",", sv, ");");
               break;
-            case gl2.STENCIL_CLEAR_VALUE:
+            case gl.STENCIL_CLEAR_VALUE:
               popBody.push("gl.clearStencil(", sv, ");");
               break;
-            case gl2.VIEWPORT:
+            case gl.VIEWPORT:
               popBody.push("var c=", sv, ";gl.viewport(c[0],c[1],c[2],c[3]);");
               break;
             //Pixel storage
-            case gl2.PACK_ALIGNMENT:
-            case gl2.UNPACK_ALIGNMENT:
-            case gl2.UNPACK_COLORSPACE_CONVERSION_WEBGL:
-            case gl2.UNPACK_FLIP_Y_WEBGL:
-            case gl2.UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+            case gl.PACK_ALIGNMENT:
+            case gl.UNPACK_ALIGNMENT:
+            case gl.UNPACK_COLORSPACE_CONVERSION_WEBGL:
+            case gl.UNPACK_FLIP_Y_WEBGL:
+            case gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL:
               popBody.push("gl.pixelStorei(", type, ",", sv, ");");
               break;
             //Flags
-            case gl2.BLEND:
-            case gl2.CULL_FACE:
-            case gl2.DEPTH_TEST:
-            case gl2.DITHER:
-            case gl2.POLYGON_OFFSET_FILL:
-            case gl2.SAMPLE_COVERAGE:
-            case gl2.SCISSOR_TEST:
-            case gl2.STENCIL_TEST:
+            case gl.BLEND:
+            case gl.CULL_FACE:
+            case gl.DEPTH_TEST:
+            case gl.DITHER:
+            case gl.POLYGON_OFFSET_FILL:
+            case gl.SAMPLE_COVERAGE:
+            case gl.SCISSOR_TEST:
+            case gl.STENCIL_TEST:
               popBody.push("if(", sv, "){gl.enable(", type, ")}else{gl.disable(", type, ")}");
               break;
             //Hints
-            case gl2.GENERATE_MIPMAP_HINT:
+            case gl.GENERATE_MIPMAP_HINT:
               popBody.push("gl.hint(", type, ",", sv, ");");
               break;
             default:
@@ -35722,40 +35727,47 @@ void main(void) {
         "return new StateStack(gl);"
       ].join("");
       var proc = new Function("gl", code);
-      return proc(gl2);
+      return proc(gl);
     }
     return savestate;
   }
   var savestateExports = requireSavestate();
   const createStateStack = /* @__PURE__ */ getDefaultExportFromCjs(savestateExports);
   function initWebglStateStores(map2) {
-    const useDeckStorei = (gl22) => {
-      gl22.pixelStorei(gl22.UNPACK_FLIP_Y_WEBGL, false);
-      gl22.pixelStorei(gl22.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl22.disable(gl22.CULL_FACE);
+    const useDeckStorei = (gl2) => {
+      gl2.pixelStorei(gl2.UNPACK_FLIP_Y_WEBGL, false);
+      gl2.pixelStorei(gl2.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      if (gl2.state?.cache) {
+        gl2.state.cache[gl2.CULL_FACE] = false;
+        gl2.state.cache[gl2.DEPTH_TEST] = false;
+        gl2.state.cache[gl2.DEPTH_WRITEMASK] = false;
+      }
+      gl2.disable(gl2.CULL_FACE);
+      gl2.disable(gl2.DEPTH_TEST);
+      gl2.depthMask(false);
     };
-    const gl2 = map2.getWebGLContext();
-    const mapglState = createStateStack(gl2);
-    const deckGlState = createStateStack(gl2);
+    const gl = map2.getWebGLContext();
+    const mapglState = createStateStack(gl);
+    const deckGlState = createStateStack(gl);
     const useDeckWebglState = () => {
       mapglState.push();
       deckGlState.pop();
-      useDeckStorei(gl2);
+      useDeckStorei(gl);
     };
     const useMapglWebglState = () => {
-      const maxUnits = gl2.getParameter(gl2.MAX_TEXTURE_IMAGE_UNITS);
+      const maxUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
       for (let i2 = 0; i2 < maxUnits; i2++) {
-        gl2.activeTexture(gl2.TEXTURE0 + i2);
-        gl2.bindTexture(gl2.TEXTURE_2D, null);
-        gl2.bindTexture(gl2.TEXTURE_CUBE_MAP, null);
+        gl.activeTexture(gl.TEXTURE0 + i2);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
       }
-      gl2.activeTexture(gl2.TEXTURE0);
+      gl.activeTexture(gl.TEXTURE0);
       deckGlState.push();
       mapglState.pop();
-      useDeckStorei(gl2);
+      useDeckStorei(gl);
     };
     mapglState.push();
-    useDeckStorei(gl2);
+    useDeckStorei(gl);
     deckGlState.push();
     return { useDeckWebglState, useMapglWebglState, mapglState, deckGlState };
   }
@@ -35817,15 +35829,15 @@ void main(void) {
      * @param {?Number} index Номер текстуры в контексте WebGL.
      * Если его нет, используется уже активированный юнит текстуры.
      */
-    enable(gl2, index) {
+    enable(gl, index) {
       const unit = index ?? this.options.unit;
       if (unit !== void 0) {
-        gl2.activeTexture(gl2.TEXTURE0 + unit);
+        gl.activeTexture(gl.TEXTURE0 + unit);
       }
       if (!this._texture) {
-        this.prepare(gl2);
+        this.prepare(gl);
       }
-      gl2.bindTexture(gl2.TEXTURE_2D, this._texture);
+      gl.bindTexture(gl.TEXTURE_2D, this._texture);
       return this;
     }
     /**
@@ -35854,43 +35866,43 @@ void main(void) {
      * @param {number} x Горизонтальное смещение, с которого записываем в текстуру
      * @param {number} y Вертикальное смещение, с которого записываем в текстуру
      */
-    subImage(gl2, src, x2, y2) {
-      gl2.bindTexture(gl2.TEXTURE_2D, this._texture);
-      gl2.pixelStorei(gl2.UNPACK_FLIP_Y_WEBGL, this.options.flipY);
-      gl2.pixelStorei(gl2.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.options.premultiplyAlpha);
-      const format = this._toGlParam(gl2, this.options.format);
-      const type = this._toGlParam(gl2, this.options.type ?? Texture.UnsignedByte);
+    subImage(gl, src, x2, y2) {
+      gl.bindTexture(gl.TEXTURE_2D, this._texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.options.flipY);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.options.premultiplyAlpha);
+      const format = this._toGlParam(gl, this.options.format);
+      const type = this._toGlParam(gl, this.options.type ?? Texture.UnsignedByte);
       if (format === null || type === null) {
         return this;
       }
-      gl2.texSubImage2D(gl2.TEXTURE_2D, 0, x2, y2, format, type, src);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, x2, y2, format, type, src);
       return this;
     }
     /**
      * Кладёт текстуру в видеокарту
      * @param {WebGLRenderingContext} gl
      */
-    prepare(gl2) {
-      this._glContext = gl2;
-      this._texture = gl2.createTexture();
-      gl2.bindTexture(gl2.TEXTURE_2D, this._texture);
-      gl2.pixelStorei(gl2.UNPACK_FLIP_Y_WEBGL, this.options.flipY);
-      gl2.pixelStorei(gl2.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.options.premultiplyAlpha);
-      const format = this._toGlParam(gl2, this.options.format);
-      const type = this._toGlParam(gl2, this.options.type ?? Texture.UnsignedByte);
-      const wrapS = this._toGlParam(gl2, this.options.wrapS);
-      const wrapT = this._toGlParam(gl2, this.options.wrapT);
-      const magFilter = this._toGlParam(gl2, this.options.magFilter ?? Texture.LinearFilter);
+    prepare(gl) {
+      this._glContext = gl;
+      this._texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this._texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.options.flipY);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.options.premultiplyAlpha);
+      const format = this._toGlParam(gl, this.options.format);
+      const type = this._toGlParam(gl, this.options.type ?? Texture.UnsignedByte);
+      const wrapS = this._toGlParam(gl, this.options.wrapS);
+      const wrapT = this._toGlParam(gl, this.options.wrapT);
+      const magFilter = this._toGlParam(gl, this.options.magFilter ?? Texture.LinearFilter);
       const minFilter = this._toGlParam(
-        gl2,
+        gl,
         this.options.minFilter ?? Texture.LinearMipMapLinearFilter
       );
       if (format !== null && type !== null) {
-        const internalFormat = this.hookInternalFormat(format, type, gl2);
+        const internalFormat = this.hookInternalFormat(format, type, gl);
         if (ArrayBuffer.isView(this._src) || this._src === null) {
           if (this.options.size) {
-            gl2.texImage2D(
-              gl2.TEXTURE_2D,
+            gl.texImage2D(
+              gl.TEXTURE_2D,
               0,
               internalFormat,
               this.options.size[0],
@@ -35902,89 +35914,89 @@ void main(void) {
             );
           }
         } else if (this._src) {
-          gl2.texImage2D(gl2.TEXTURE_2D, 0, format, format, type, this._src);
+          gl.texImage2D(gl.TEXTURE_2D, 0, format, format, type, this._src);
         }
       }
       if (wrapS !== null && wrapT !== null) {
-        gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_S, wrapS);
-        gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_WRAP_T, wrapT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapS);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapT);
       }
       if (magFilter !== null && minFilter !== null) {
-        gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_MAG_FILTER, magFilter);
-        gl2.texParameteri(gl2.TEXTURE_2D, gl2.TEXTURE_MIN_FILTER, minFilter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, magFilter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter);
       }
       if (this.options.generateMipmaps && this.options.minFilter !== Texture.NearestFilter && this.options.minFilter !== Texture.LinearFilter) {
-        gl2.generateMipmap(gl2.TEXTURE_2D);
+        gl.generateMipmap(gl.TEXTURE_2D);
       }
-      gl2.bindTexture(gl2.TEXTURE_2D, null);
+      gl.bindTexture(gl.TEXTURE_2D, null);
       return this;
     }
-    _toGlParam(gl2, param) {
+    _toGlParam(gl, param) {
       if (param === Texture.ClampToEdgeWrapping) {
-        return gl2.CLAMP_TO_EDGE;
+        return gl.CLAMP_TO_EDGE;
       }
       if (param === Texture.Repeat) {
-        return gl2.REPEAT;
+        return gl.REPEAT;
       }
       if (param === Texture.MirroredRepeat) {
-        return gl2.MIRRORED_REPEAT;
+        return gl.MIRRORED_REPEAT;
       }
       if (param === Texture.NearestFilter) {
-        return gl2.NEAREST;
+        return gl.NEAREST;
       }
       if (param === Texture.NearestMipMapNearestFilter) {
-        return gl2.NEAREST_MIPMAP_NEAREST;
+        return gl.NEAREST_MIPMAP_NEAREST;
       }
       if (param === Texture.NearestMipMapLinearFilter) {
-        return gl2.NEAREST_MIPMAP_LINEAR;
+        return gl.NEAREST_MIPMAP_LINEAR;
       }
       if (param === Texture.LinearFilter) {
-        return gl2.LINEAR;
+        return gl.LINEAR;
       }
       if (param === Texture.LinearMipMapNearestFilter) {
-        return gl2.LINEAR_MIPMAP_NEAREST;
+        return gl.LINEAR_MIPMAP_NEAREST;
       }
       if (param === Texture.LinearMipMapLinearFilter) {
-        return gl2.LINEAR_MIPMAP_LINEAR;
+        return gl.LINEAR_MIPMAP_LINEAR;
       }
       if (param === Texture.RgbaFormat) {
-        return gl2.RGBA;
+        return gl.RGBA;
       }
       if (param === Texture.AlphaFormat) {
-        return gl2.ALPHA;
+        return gl.ALPHA;
       }
       if (param === Texture.RgbFormat) {
-        return gl2.RGB;
+        return gl.RGB;
       }
       if (param === Texture.DepthComponentFormat) {
-        return gl2.DEPTH_COMPONENT;
+        return gl.DEPTH_COMPONENT;
       }
       if (param === Texture.UnsignedByte) {
-        return gl2.UNSIGNED_BYTE;
+        return gl.UNSIGNED_BYTE;
       }
       if (param === Texture.Float) {
-        return gl2.FLOAT;
+        return gl.FLOAT;
       }
       if (param === Texture.UnsignedInt) {
-        return gl2.UNSIGNED_INT;
+        return gl.UNSIGNED_INT;
       }
-      if (param === Texture.RedFormat && !(gl2 instanceof WebGLRenderingContext)) {
-        return gl2.RED;
+      if (param === Texture.RedFormat && !(gl instanceof WebGLRenderingContext)) {
+        return gl.RED;
       }
       return null;
     }
-    hookInternalFormat(format, type, gl2) {
-      if (gl2 instanceof WebGLRenderingContext) {
+    hookInternalFormat(format, type, gl) {
+      if (gl instanceof WebGLRenderingContext) {
         return format;
       }
-      if (format === gl2.DEPTH_COMPONENT) {
-        return gl2.DEPTH_COMPONENT24;
+      if (format === gl.DEPTH_COMPONENT) {
+        return gl.DEPTH_COMPONENT24;
       }
-      if (type === gl2.FLOAT && format === gl2.RGBA) {
-        return gl2.RGBA32F;
+      if (type === gl.FLOAT && format === gl.RGBA) {
+        return gl.RGBA32F;
       }
-      if (type === gl2.FLOAT && format === gl2.RED) {
-        return gl2.R32F;
+      if (type === gl.FLOAT && format === gl.RED) {
+        return gl.R32F;
       }
       return format;
     }
@@ -36019,19 +36031,19 @@ void main(void) {
      * Связывает компоненты с контекстом WebGL
      * @param {WebGLRenderingContext} gl
      */
-    bind(gl2) {
+    bind(gl) {
       if (!this._frameBuffer) {
-        this._prepare(gl2);
+        this._prepare(gl);
       }
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, this._frameBuffer);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this._frameBuffer);
       return this;
     }
     /**
      * Устанавливает пустой фреймбуфер у контекста WebGL
      * @param {WebGLRenderingContext} gl
      */
-    unbind(gl2) {
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+    unbind(gl) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       return this;
     }
     /**
@@ -36067,18 +36079,18 @@ void main(void) {
      * @param {WebGLRenderingContext} gl
      * @ignore
      */
-    _prepare(gl2) {
-      this._glContext = gl2;
+    _prepare(gl) {
+      this._glContext = gl;
       if (!this._texture) {
         this._texture = new Texture(null, this.options);
       }
-      this._texture.prepare(gl2);
-      this._frameBuffer = gl2.createFramebuffer();
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, this._frameBuffer);
-      gl2.framebufferTexture2D(
-        gl2.FRAMEBUFFER,
-        gl2.COLOR_ATTACHMENT0,
-        gl2.TEXTURE_2D,
+      this._texture.prepare(gl);
+      this._frameBuffer = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this._frameBuffer);
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
         this._texture.getTexture(),
         0
       );
@@ -36092,33 +36104,33 @@ void main(void) {
           generateMipmaps: false,
           type: Texture.UnsignedInt
         });
-        depthBuffer.prepare(gl2);
-        gl2.framebufferTexture2D(
-          gl2.FRAMEBUFFER,
-          gl2.DEPTH_ATTACHMENT,
-          gl2.TEXTURE_2D,
+        depthBuffer.prepare(gl);
+        gl.framebufferTexture2D(
+          gl.FRAMEBUFFER,
+          gl.DEPTH_ATTACHMENT,
+          gl.TEXTURE_2D,
           depthBuffer.getTexture(),
           0
         );
       } else {
-        this._depthBuffer = gl2.createRenderbuffer();
-        gl2.bindRenderbuffer(gl2.RENDERBUFFER, this._depthBuffer);
-        gl2.renderbufferStorage(
-          gl2.RENDERBUFFER,
-          gl2.DEPTH_COMPONENT16,
+        this._depthBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffer);
+        gl.renderbufferStorage(
+          gl.RENDERBUFFER,
+          gl.DEPTH_COMPONENT16,
           this.options.size[0],
           this.options.size[1]
         );
-        gl2.framebufferRenderbuffer(
-          gl2.FRAMEBUFFER,
-          gl2.DEPTH_ATTACHMENT,
-          gl2.RENDERBUFFER,
+        gl.framebufferRenderbuffer(
+          gl.FRAMEBUFFER,
+          gl.DEPTH_ATTACHMENT,
+          gl.RENDERBUFFER,
           this._depthBuffer
         );
       }
-      this._checkComplete(gl2);
-      gl2.bindRenderbuffer(gl2.RENDERBUFFER, null);
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+      this._checkComplete(gl);
+      gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
     /**
      * Удаляет данные из видеокарты
@@ -36143,17 +36155,17 @@ void main(void) {
      * @param {WebGLRenderingContext} gl
      * @ignore
      */
-    _checkComplete(gl2) {
-      const status = gl2.checkFramebufferStatus(gl2.FRAMEBUFFER);
-      if (status === gl2.FRAMEBUFFER_COMPLETE) {
+    _checkComplete(gl) {
+      const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      if (status === gl.FRAMEBUFFER_COMPLETE) {
         return;
-      } else if (status === gl2.FRAMEBUFFER_UNSUPPORTED) {
+      } else if (status === gl.FRAMEBUFFER_UNSUPPORTED) {
         console.log("Framebuffer is unsupported");
-      } else if (status === gl2.FRAMEBUFFER_INCOMPLETE_ATTACHMENT) {
+      } else if (status === gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT) {
         console.log("Framebuffer incomplete attachment");
-      } else if (status === gl2.FRAMEBUFFER_INCOMPLETE_DIMENSIONS) {
+      } else if (status === gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS) {
         console.log("Framebuffer incomplete dimensions");
-      } else if (status === gl2.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) {
+      } else if (status === gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) {
         console.log("Framebuffer incomplete missing attachment");
       } else {
         console.log(`Unexpected framebuffer status: ${status}`);
@@ -36238,9 +36250,9 @@ void main(void) {
      * @param {WebGLRenderingContext | WebGL2RenderingContext} gl Gl-контекст
      * @returns {number | null} GL-тип индексного буфера
      */
-    getElementsGLType(gl2) {
+    getElementsGLType(gl) {
       if (this.indicesBuffer) {
-        return this.indicesBuffer.getGLType(gl2);
+        return this.indicesBuffer.getGLType(gl);
       }
       return null;
     }
@@ -36254,7 +36266,7 @@ void main(void) {
       Object.assign(this.attributesAliases, aliases);
       this.remove();
     }
-    setAttributes(gl2, instancesExt) {
+    setAttributes(gl, instancesExt) {
       const shaderAttributes = this._shaderProgram.attributes;
       const attributes = this._attributes;
       for (const attrNameInShader in shaderAttributes) {
@@ -36267,11 +36279,11 @@ void main(void) {
         const shaderAttribute = shaderAttributes[attrNameInShader];
         if (shaderAttribute.index !== true) {
           for (let i2 = 0; i2 < shaderAttribute.locationsCount; i2++) {
-            gl2.enableVertexAttribArray(shaderAttribute.location + i2);
+            gl.enableVertexAttribArray(shaderAttribute.location + i2);
           }
         }
         vaoAttributeBuffer.bind(
-          gl2,
+          gl,
           shaderAttribute.location,
           void 0,
           instancesExt,
@@ -36279,57 +36291,57 @@ void main(void) {
         );
       }
       if (this.indicesBuffer) {
-        this.indicesBuffer.bind(gl2);
+        this.indicesBuffer.bind(gl);
       }
     }
-    _bind(gl2, vaoExt, instancesExt) {
+    _bind(gl, vaoExt, instancesExt) {
       if (!this._vao) {
-        this._prepare(gl2, vaoExt, instancesExt);
+        this._prepare(gl, vaoExt, instancesExt);
       } else {
         this._glBindVertexArray(this._vao);
       }
     }
-    _prepare(gl2, vaoExt, instancesExt) {
-      this._gl = gl2;
+    _prepare(gl, vaoExt, instancesExt) {
+      this._gl = gl;
       if (vaoExt) {
         this._vaoExt = vaoExt;
       }
       this._vao = this._glCreateVertexArray();
       this._glBindVertexArray(this._vao);
-      this.setAttributes(gl2, instancesExt);
+      this.setAttributes(gl, instancesExt);
     }
     _glCreateVertexArray() {
-      const gl2 = this._gl;
+      const gl = this._gl;
       const ext = this._vaoExt;
-      if (gl2 && this._isWebGL2(gl2)) {
-        return gl2.createVertexArray();
+      if (gl && this._isWebGL2(gl)) {
+        return gl.createVertexArray();
       } else if (ext) {
         return ext.createVertexArrayOES();
       }
       return null;
     }
     _glBindVertexArray(vao) {
-      const gl2 = this._gl;
+      const gl = this._gl;
       const ext = this._vaoExt;
-      if (gl2 && this._isWebGL2(gl2)) {
-        gl2.bindVertexArray(vao);
+      if (gl && this._isWebGL2(gl)) {
+        gl.bindVertexArray(vao);
       } else if (ext) {
         ext.bindVertexArrayOES(vao);
-      } else if (gl2) {
-        this._shaderProgram.bind(gl2, void 0, this._attributes);
+      } else if (gl) {
+        this._shaderProgram.bind(gl, void 0, this._attributes);
       }
     }
     _glDeleteVertexArray(vao) {
-      const gl2 = this._gl;
+      const gl = this._gl;
       const ext = this._vaoExt;
-      if (gl2 && this._isWebGL2(gl2)) {
-        gl2.deleteVertexArray(vao);
+      if (gl && this._isWebGL2(gl)) {
+        gl.deleteVertexArray(vao);
       } else if (ext) {
         ext.deleteVertexArrayOES(vao);
       }
     }
-    _isWebGL2(gl2) {
-      return typeof window !== "undefined" && "WebGL2RenderingContext" in window && gl2 instanceof WebGL2RenderingContext;
+    _isWebGL2(gl) {
+      return typeof window !== "undefined" && "WebGL2RenderingContext" in window && gl instanceof WebGL2RenderingContext;
     }
   }
   class ShaderAttribute {
@@ -36345,32 +36357,32 @@ void main(void) {
       this.locationsCount = options.locationsCount ?? 1;
       checkAttributeLocationCount(this.locationsCount);
     }
-    bindLocation(gl2, shaderProgram) {
+    bindLocation(gl, shaderProgram) {
       if (this.location !== -1 && this.index !== true) {
-        gl2.bindAttribLocation(shaderProgram, this.location, this.name);
+        gl.bindAttribLocation(shaderProgram, this.location, this.name);
       }
       return this;
     }
-    getLocation(gl2, shaderProgram) {
+    getLocation(gl, shaderProgram) {
       if (this.location === -1 && this.index !== true) {
-        this.location = gl2.getAttribLocation(shaderProgram, this.name);
+        this.location = gl.getAttribLocation(shaderProgram, this.name);
       }
       return this;
     }
-    bind(gl2, buffer) {
+    bind(gl, buffer) {
       if (!this._enable && this.index !== true) {
         for (let i2 = 0; i2 < this.locationsCount; i2++) {
-          gl2.enableVertexAttribArray(this.location + i2);
+          gl.enableVertexAttribArray(this.location + i2);
         }
         this._enable = true;
       }
-      buffer.bind(gl2, this.location, void 0);
+      buffer.bind(gl, this.location, void 0);
       return this;
     }
-    disable(gl2) {
+    disable(gl) {
       if (this._enable && this.index !== true) {
         for (let i2 = 0; i2 < this.locationsCount; i2++) {
-          gl2.disableVertexAttribArray(this.location + i2);
+          gl.disableVertexAttribArray(this.location + i2);
         }
         this._enable = false;
       }
@@ -36390,68 +36402,68 @@ void main(void) {
       this.name = options.name;
       this.type = options.type;
     }
-    getLocation(gl2, webglProgram) {
-      this.location = gl2.getUniformLocation(webglProgram, this.name);
+    getLocation(gl, webglProgram) {
+      this.location = gl.getUniformLocation(webglProgram, this.name);
       return this;
     }
-    bind(gl2, value) {
+    bind(gl, value) {
       switch (this.type) {
         case "1i":
-          gl2.uniform1i(this.location, value);
+          gl.uniform1i(this.location, value);
           break;
         case "1f":
-          gl2.uniform1f(this.location, value);
+          gl.uniform1f(this.location, value);
           break;
         case "2i":
-          gl2.uniform2i(this.location, value[0], value[1]);
+          gl.uniform2i(this.location, value[0], value[1]);
           break;
         case "2f":
-          gl2.uniform2f(this.location, value[0], value[1]);
+          gl.uniform2f(this.location, value[0], value[1]);
           break;
         case "3i":
-          gl2.uniform3i(this.location, value[0], value[1], value[2]);
+          gl.uniform3i(this.location, value[0], value[1], value[2]);
           break;
         case "3f":
-          gl2.uniform3f(this.location, value[0], value[1], value[2]);
+          gl.uniform3f(this.location, value[0], value[1], value[2]);
           break;
         case "4i":
-          gl2.uniform4i(this.location, value[0], value[1], value[2], value[3]);
+          gl.uniform4i(this.location, value[0], value[1], value[2], value[3]);
           break;
         case "4f":
-          gl2.uniform4f(this.location, value[0], value[1], value[2], value[3]);
+          gl.uniform4f(this.location, value[0], value[1], value[2], value[3]);
           break;
         case "1iv":
-          gl2.uniform1iv(this.location, value);
+          gl.uniform1iv(this.location, value);
           break;
         case "1fv":
-          gl2.uniform1fv(this.location, value);
+          gl.uniform1fv(this.location, value);
           break;
         case "2iv":
-          gl2.uniform2iv(this.location, value);
+          gl.uniform2iv(this.location, value);
           break;
         case "2fv":
-          gl2.uniform2fv(this.location, value);
+          gl.uniform2fv(this.location, value);
           break;
         case "3iv":
-          gl2.uniform3iv(this.location, value);
+          gl.uniform3iv(this.location, value);
           break;
         case "3fv":
-          gl2.uniform3fv(this.location, value);
+          gl.uniform3fv(this.location, value);
           break;
         case "4iv":
-          gl2.uniform4iv(this.location, value);
+          gl.uniform4iv(this.location, value);
           break;
         case "4fv":
-          gl2.uniform4fv(this.location, value);
+          gl.uniform4fv(this.location, value);
           break;
         case "mat2":
-          gl2.uniformMatrix2fv(this.location, false, value);
+          gl.uniformMatrix2fv(this.location, false, value);
           break;
         case "mat3":
-          gl2.uniformMatrix3fv(this.location, false, value);
+          gl.uniformMatrix3fv(this.location, false, value);
           break;
         case "mat4":
-          gl2.uniformMatrix4fv(this.location, false, value);
+          gl.uniformMatrix4fv(this.location, false, value);
           break;
         default:
           throw new Error(`[2gl] Unsupported uniform type: '${this.type}'`);
@@ -36485,16 +36497,16 @@ void main(void) {
      * Инициализирует программу с контекстом WebGl
      * @param gl
      */
-    enable(gl2, externalDefinitions) {
+    enable(gl, externalDefinitions) {
       if (this._error) {
         return this;
       }
-      this.link(gl2, externalDefinitions);
-      this.locate(gl2);
+      this.link(gl, externalDefinitions);
+      this.locate(gl);
       if (this._error) {
         return this;
       }
-      gl2.useProgram(this._webglProgram);
+      gl.useProgram(this._webglProgram);
       return this;
     }
     /**
@@ -36504,18 +36516,18 @@ void main(void) {
      * @param [uniforms] Key-value объект содержащий значения юниформ
      * @param [attributes] Key-value объект содержащий значения атрибутов
      */
-    bind(gl2, uniforms, attributes) {
+    bind(gl, uniforms, attributes) {
       if (this._error) {
         return this;
       }
       if (uniforms) {
         for (const name2 in uniforms) {
-          this.uniforms[name2].bind(gl2, uniforms[name2]);
+          this.uniforms[name2].bind(gl, uniforms[name2]);
         }
       }
       if (attributes) {
         for (const name2 in attributes) {
-          this.attributes[name2].bind(gl2, attributes[name2]);
+          this.attributes[name2].bind(gl, attributes[name2]);
         }
       }
       return this;
@@ -36524,12 +36536,12 @@ void main(void) {
      * Выключает программу
      * @param gl
      */
-    disable(gl2) {
+    disable(gl) {
       if (this._error) {
         return this;
       }
       for (const name2 in this.attributes) {
-        this.attributes[name2].disable(gl2);
+        this.attributes[name2].disable(gl);
       }
       return this;
     }
@@ -36538,30 +36550,30 @@ void main(void) {
      * Одна из двух необходимых функций для работы шейдерной программы.
      * @param gl
      */
-    link(gl2, externalDefinitions) {
+    link(gl, externalDefinitions) {
       if (this._linked || this._error) {
         return this;
       }
       try {
-        this._webglProgram = gl2.createProgram();
+        this._webglProgram = gl.createProgram();
         if (!this._webglProgram) {
           throw new Error("Failed to create shader program");
         }
-        const vs2 = this._vertexShader.get(gl2, externalDefinitions);
-        const fs2 = this._fragmentShader.get(gl2, externalDefinitions);
+        const vs2 = this._vertexShader.get(gl, externalDefinitions);
+        const fs2 = this._fragmentShader.get(gl, externalDefinitions);
         if (vs2) {
-          gl2.attachShader(this._webglProgram, vs2);
+          gl.attachShader(this._webglProgram, vs2);
         }
         if (fs2) {
-          gl2.attachShader(this._webglProgram, fs2);
+          gl.attachShader(this._webglProgram, fs2);
         }
         for (const name2 in this.attributes) {
-          this.attributes[name2].bindLocation(gl2, this._webglProgram);
+          this.attributes[name2].bindLocation(gl, this._webglProgram);
         }
-        gl2.linkProgram(this._webglProgram);
-        if (!gl2.getProgramParameter(this._webglProgram, gl2.LINK_STATUS)) {
+        gl.linkProgram(this._webglProgram);
+        if (!gl.getProgramParameter(this._webglProgram, gl.LINK_STATUS)) {
           throw new Error(
-            gl2.getProgramInfoLog(this._webglProgram) || "Couldn't get shader program Info Log"
+            gl.getProgramInfoLog(this._webglProgram) || "Couldn't get shader program Info Log"
           );
         }
         this._linked = true;
@@ -36576,15 +36588,15 @@ void main(void) {
      * Одна из двух необходимых функций для работы шейдерной программы.
      * @param gl
      */
-    locate(gl2) {
+    locate(gl) {
       if (this._located || this._error || !this._webglProgram) {
         return this;
       }
       for (const name2 in this.attributes) {
-        this.attributes[name2].getLocation(gl2, this._webglProgram);
+        this.attributes[name2].getLocation(gl, this._webglProgram);
       }
       for (const name2 in this.uniforms) {
-        this.uniforms[name2].getLocation(gl2, this._webglProgram);
+        this.uniforms[name2].getLocation(gl, this._webglProgram);
       }
       this._located = true;
       return this;
@@ -36615,9 +36627,9 @@ void main(void) {
      * @param gl Контекст WebGL
      * @param [externalDefinitions] Внешние #define, которые могут перезаписать существующие определения
      */
-    get(gl2, externalDefinitions) {
+    get(gl, externalDefinitions) {
       if (!this.shader) {
-        this.compile(gl2, externalDefinitions);
+        this.compile(gl, externalDefinitions);
       }
       return this.shader;
     }
@@ -36625,9 +36637,9 @@ void main(void) {
      * Удаляет шейдер из видеокарты
      * @param gl Контекст WebGl
      */
-    remove(gl2) {
+    remove(gl) {
       if (this.shader) {
-        gl2.deleteShader(this.shader);
+        gl.deleteShader(this.shader);
       }
     }
     /**
@@ -36639,24 +36651,24 @@ void main(void) {
     /**
      * Компилирует данный шейдер
      */
-    compile(gl2, externalDefinitions) {
-      const glType = this.type === Shader.Vertex ? gl2.VERTEX_SHADER : gl2.FRAGMENT_SHADER;
-      const shader = this.shader = gl2.createShader(glType);
-      if (!shader || gl2.isContextLost()) {
+    compile(gl, externalDefinitions) {
+      const glType = this.type === Shader.Vertex ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER;
+      const shader = this.shader = gl.createShader(glType);
+      if (!shader || gl.isContextLost()) {
         throw new Error(
           `[2gl] Failed to create shader. Shader is null: ${String(
             !shader
-          )}. Context is lost: ${String(gl2.isContextLost())}`
+          )}. Context is lost: ${String(gl.isContextLost())}`
         );
       }
       if (externalDefinitions) {
         this.combineDefintions(externalDefinitions);
       }
       const code = this.assembleShaderText();
-      gl2.shaderSource(shader, code);
-      gl2.compileShader(shader);
-      if (!gl2.getShaderParameter(shader, gl2.COMPILE_STATUS)) {
-        const infoLog = gl2.getShaderInfoLog(shader);
+      gl.shaderSource(shader, code);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        const infoLog = gl.getShaderInfoLog(shader);
         const codeLines = (code || "").split("\n");
         throw new Error(
           infoLog ? infoLog.replace(
@@ -36826,19 +36838,19 @@ Erroneous line: <<${line}>>
      * @param instancesExt Экстеншн для работы с instanced буферами,
      * @param locationsCount Количество слотов необходимых атрибуту. По умолчанию равен 1.
      */
-    bind(gl2, location, options, instancesExt, locationsCount) {
+    bind(gl, location, options, instancesExt, locationsCount) {
       if (!this._glBuffer) {
-        this.prepare(gl2);
+        this.prepare(gl);
       }
       if (this.type === Buffer.ArrayBuffer) {
-        gl2.bindBuffer(gl2.ARRAY_BUFFER, this._glBuffer);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._glBuffer);
         location = location || 0;
         options = options || this.options;
         locationsCount = locationsCount ?? 1;
         checkAttributeLocationCount(locationsCount);
-        const type = this._toGlParam(gl2, options.dataType) || gl2.FLOAT;
+        const type = this._toGlParam(gl, options.dataType) || gl.FLOAT;
         if (locationsCount === 1) {
-          gl2.vertexAttribPointer(
+          gl.vertexAttribPointer(
             location,
             options.itemSize,
             type,
@@ -36846,11 +36858,11 @@ Erroneous line: <<${line}>>
             options.stride,
             options.offset
           );
-          this.bindVertexAttribDivisor(gl2, location, options, instancesExt);
+          this.bindVertexAttribDivisor(gl, location, options, instancesExt);
         } else {
           const componentSize = Buffer._dataTypeSize(options.dataType);
           for (let i2 = 0; i2 < locationsCount; i2++) {
-            gl2.vertexAttribPointer(
+            gl.vertexAttribPointer(
               location + i2,
               locationsCount,
               type,
@@ -36858,11 +36870,11 @@ Erroneous line: <<${line}>>
               options.stride,
               options.offset + i2 * locationsCount * componentSize
             );
-            this.bindVertexAttribDivisor(gl2, location + i2, options, instancesExt);
+            this.bindVertexAttribDivisor(gl, location + i2, options, instancesExt);
           }
         }
       } else if (this.type === Buffer.ElementArrayBuffer) {
-        gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, this._glBuffer);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._glBuffer);
       }
       return this;
     }
@@ -36879,10 +36891,10 @@ Erroneous line: <<${line}>>
      * @param {Number} index Индекс, с которого начать замену
      * @param {TypedArray} data Новые данные
      */
-    subData(gl2, index, data2) {
-      const type = this._toGlParam(gl2, this.type) || gl2.ARRAY_BUFFER;
-      gl2.bindBuffer(type, this._glBuffer);
-      gl2.bufferSubData(type, index, data2);
+    subData(gl, index, data2) {
+      const type = this._toGlParam(gl, this.type) || gl.ARRAY_BUFFER;
+      gl.bindBuffer(type, this._glBuffer);
+      gl.bufferSubData(type, index, data2);
       return this;
     }
     /**
@@ -36890,13 +36902,13 @@ Erroneous line: <<${line}>>
      * @param gl WebGL Контекст
      * @ignore
      */
-    prepare(gl2) {
-      this._glContext = gl2;
-      this._glBuffer = gl2.createBuffer();
-      const type = this._toGlParam(gl2, this.type) || gl2.ARRAY_BUFFER;
-      const drawType = this._toGlParam(gl2, this.drawType) || gl2.STATIC_DRAW;
-      gl2.bindBuffer(type, this._glBuffer);
-      gl2.bufferData(type, this._initData, drawType);
+    prepare(gl) {
+      this._glContext = gl;
+      this._glBuffer = gl.createBuffer();
+      const type = this._toGlParam(gl, this.type) || gl.ARRAY_BUFFER;
+      const drawType = this._toGlParam(gl, this.drawType) || gl.STATIC_DRAW;
+      gl.bindBuffer(type, this._glBuffer);
+      gl.bufferData(type, this._initData, drawType);
       this._initData = null;
       return this;
     }
@@ -36906,8 +36918,8 @@ Erroneous line: <<${line}>>
      * @returns {number | null} GL-тип буфера
      * @ignore
      */
-    getGLType(gl2) {
-      return this._toGlParam(gl2, this.options.dataType);
+    getGLType(gl) {
+      return this._toGlParam(gl, this.options.dataType);
     }
     /**
      * Удаляет данные из видеокарты
@@ -36926,48 +36938,48 @@ Erroneous line: <<${line}>>
      * @param {Buffer.ArrayBuffer | Buffer.ElementArrayBuffer} param
      * @ignore
      */
-    _toGlParam(gl2, param) {
+    _toGlParam(gl, param) {
       if (param === Buffer.ArrayBuffer) {
-        return gl2.ARRAY_BUFFER;
+        return gl.ARRAY_BUFFER;
       }
       if (param === Buffer.ElementArrayBuffer) {
-        return gl2.ELEMENT_ARRAY_BUFFER;
+        return gl.ELEMENT_ARRAY_BUFFER;
       }
       if (param === Buffer.StaticDraw) {
-        return gl2.STATIC_DRAW;
+        return gl.STATIC_DRAW;
       }
       if (param === Buffer.DynamicDraw) {
-        return gl2.DYNAMIC_DRAW;
+        return gl.DYNAMIC_DRAW;
       }
       if (param === Buffer.Byte) {
-        return gl2.BYTE;
+        return gl.BYTE;
       }
       if (param === Buffer.Short) {
-        return gl2.SHORT;
+        return gl.SHORT;
       }
       if (param === Buffer.Int) {
-        return gl2.INT;
+        return gl.INT;
       }
       if (param === Buffer.Float) {
-        return gl2.FLOAT;
+        return gl.FLOAT;
       }
       if (param === Buffer.UnsignedByte) {
-        return gl2.UNSIGNED_BYTE;
+        return gl.UNSIGNED_BYTE;
       }
       if (param === Buffer.UnsignedShort) {
-        return gl2.UNSIGNED_SHORT;
+        return gl.UNSIGNED_SHORT;
       }
       if (param === Buffer.UnsignedInt) {
-        return gl2.UNSIGNED_INT;
+        return gl.UNSIGNED_INT;
       }
       return null;
     }
     _hasRealWebGLContext() {
       return typeof window !== "undefined" && ("WebGLRenderingContext" in window || "WebGL2RenderingContext" in window);
     }
-    bindVertexAttribDivisor(gl2, location, options, instancesExt) {
+    bindVertexAttribDivisor(gl, location, options, instancesExt) {
       if (options.instanceDivisor && this._hasRealWebGLContext()) {
-        if (gl2 instanceof WebGLRenderingContext) {
+        if (gl instanceof WebGLRenderingContext) {
           if (instancesExt) {
             instancesExt.vertexAttribDivisorANGLE(location, options.instanceDivisor);
           } else {
@@ -36976,7 +36988,7 @@ Erroneous line: <<${line}>>
             );
           }
         } else {
-          gl2.vertexAttribDivisor(location, options.instanceDivisor);
+          gl.vertexAttribDivisor(location, options.instanceDivisor);
         }
       }
     }
@@ -36986,43 +36998,43 @@ Erroneous line: <<${line}>>
   const fill_fsh = "precision mediump float;\nuniform sampler2D u_sr2d_texture;\nvarying vec2 v_vec2_position;\nvoid main()\n{\n    vec4 color = texture2D(u_sr2d_texture, v_vec2_position);\n    gl_FragColor = color;\n}";
   const fill_vsh = "attribute vec2 a_vec2_position;\nvarying vec2 v_vec2_position;\nvoid main() {\n    gl_Position = vec4(a_vec2_position, 0.0, 1.0);\n    v_vec2_position = clamp(a_vec2_position, vec2(0,0), vec2(1,1));\n}";
   function createFramebufferMSAA(map2) {
-    const gl2 = map2.getWebGLContext();
+    const gl = map2.getWebGLContext();
     const mapSize = map2.getSize();
     const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
     const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
-    const msaaFrameBuffer = gl2.createFramebuffer();
-    const depthRenderBuffer = gl2.createRenderbuffer();
-    gl2.bindRenderbuffer(gl2.RENDERBUFFER, depthRenderBuffer);
-    gl2.renderbufferStorageMultisample(
-      gl2.RENDERBUFFER,
+    const msaaFrameBuffer = gl.createFramebuffer();
+    const depthRenderBuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
+    gl.renderbufferStorageMultisample(
+      gl.RENDERBUFFER,
       4,
-      gl2.DEPTH_COMPONENT24,
+      gl.DEPTH_COMPONENT24,
       targetTextureWidth,
       targetTextureHeight
     );
-    const colorRenderBuffer = gl2.createRenderbuffer();
-    gl2.bindRenderbuffer(gl2.RENDERBUFFER, colorRenderBuffer);
-    gl2.renderbufferStorageMultisample(
-      gl2.RENDERBUFFER,
+    const colorRenderBuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, colorRenderBuffer);
+    gl.renderbufferStorageMultisample(
+      gl.RENDERBUFFER,
       4,
-      gl2.RGBA8,
+      gl.RGBA8,
       targetTextureWidth,
       targetTextureHeight
     );
-    gl2.bindFramebuffer(gl2.FRAMEBUFFER, msaaFrameBuffer);
-    gl2.framebufferRenderbuffer(
-      gl2.FRAMEBUFFER,
-      gl2.COLOR_ATTACHMENT0,
-      gl2.RENDERBUFFER,
+    gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer);
+    gl.framebufferRenderbuffer(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.RENDERBUFFER,
       colorRenderBuffer
     );
-    gl2.framebufferRenderbuffer(
-      gl2.FRAMEBUFFER,
-      gl2.DEPTH_ATTACHMENT,
-      gl2.RENDERBUFFER,
+    gl.framebufferRenderbuffer(
+      gl.FRAMEBUFFER,
+      gl.DEPTH_ATTACHMENT,
+      gl.RENDERBUFFER,
       depthRenderBuffer
     );
-    gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return wrapFramebuffer(
       msaaFrameBuffer,
       Math.ceil(map2.getSize()[0] * window.devicePixelRatio),
@@ -37030,7 +37042,7 @@ Erroneous line: <<${line}>>
     );
   }
   function createRenderTarget$1(map2) {
-    const gl2 = map2.getWebGLContext();
+    const gl = map2.getWebGLContext();
     const mapSize = map2.getSize();
     const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
     const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
@@ -37041,8 +37053,8 @@ Erroneous line: <<${line}>>
       wrapS: Texture.ClampToEdgeWrapping,
       wrapT: Texture.ClampToEdgeWrapping
     });
-    renderTarget.bind(gl2);
-    renderTarget.unbind(gl2);
+    renderTarget.bind(gl);
+    renderTarget.unbind(gl);
     renderTarget._lumaFramebuffer = wrapFramebuffer(
       renderTarget._frameBuffer,
       Math.ceil(map2.getSize()[0] * window.devicePixelRatio),
@@ -37100,15 +37112,15 @@ Erroneous line: <<${line}>>
     }
     return createProgramFill();
   }
-  function blitMsaaFrameBuffer(gl2, deckProps) {
+  function blitMsaaFrameBuffer(gl, deckProps) {
     const mapSize = deckProps._2gisData._2gisMap?.getSize();
     const msaaFrameBuffer = deckProps._2glMsaaFrameBuffer;
     const renderTarget = deckProps._2glRenderTarget;
-    if (msaaFrameBuffer && mapSize && gl2 && !(gl2 instanceof WebGLRenderingContext)) {
-      gl2.bindFramebuffer(gl2.READ_FRAMEBUFFER, msaaFrameBuffer.handle);
-      gl2.bindFramebuffer(gl2.DRAW_FRAMEBUFFER, renderTarget._frameBuffer);
-      gl2.clearBufferfv(gl2.COLOR, 0, [0, 0, 0, 0]);
-      gl2.blitFramebuffer(
+    if (msaaFrameBuffer && mapSize && gl && !(gl instanceof WebGLRenderingContext)) {
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, msaaFrameBuffer.handle);
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, renderTarget._frameBuffer);
+      gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 0]);
+      gl.blitFramebuffer(
         0,
         0,
         mapSize[0] * window.devicePixelRatio,
@@ -37117,13 +37129,14 @@ Erroneous line: <<${line}>>
         0,
         mapSize[0] * window.devicePixelRatio,
         mapSize[1] * window.devicePixelRatio,
-        gl2.COLOR_BUFFER_BIT,
-        gl2.NEAREST
+        gl.COLOR_BUFFER_BIT,
+        gl.NEAREST
       );
     }
   }
   function initDeck(map2, Deck2, deckProps) {
     const deck2 = new Deck2(initDeck2gisProps(map2, deckProps));
+    console.info("Deck2GisLayers v3.13");
     const stateStore = initWebglStateStores(map2);
     deck2.glStateStore = stateStore;
     deck2.glStateStore.useDeckWebglState();
@@ -37153,7 +37166,7 @@ Erroneous line: <<${line}>>
     const mapSize = map2.getSize();
     const targetTextureWidth = Math.ceil(mapSize[0] * window.devicePixelRatio);
     const targetTextureHeight = Math.ceil(mapSize[1] * window.devicePixelRatio);
-    const gl2 = map2.getWebGLContext();
+    const gl = map2.getWebGLContext();
     const props = deck2.props;
     const { _2glRenderTarget: renderTarget, _2glMsaaFrameBuffer: msaaFrameBuffer } = props;
     if (!renderTarget) {
@@ -37162,10 +37175,10 @@ Erroneous line: <<${line}>>
     if (renderTarget._lumaFramebuffer?.width === targetTextureWidth && renderTarget._lumaFramebuffer?.height === targetTextureHeight && (!msaaFrameBuffer || msaaFrameBuffer.width === targetTextureWidth && msaaFrameBuffer.height === targetTextureHeight)) {
       return;
     }
-    gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     renderTarget.setSize([targetTextureWidth, targetTextureHeight]);
-    renderTarget.bind(gl2);
-    renderTarget.unbind(gl2);
+    renderTarget.bind(gl);
+    renderTarget.unbind(gl);
     renderTarget._lumaFramebuffer = wrapFramebuffer(
       renderTarget._frameBuffer,
       targetTextureWidth,
@@ -37173,17 +37186,17 @@ Erroneous line: <<${line}>>
     );
     deck2.props._framebuffer = renderTarget._lumaFramebuffer;
     if (msaaFrameBuffer) {
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, msaaFrameBuffer.handle);
-      const colorRb = gl2.getFramebufferAttachmentParameter(gl2.FRAMEBUFFER, gl2.COLOR_ATTACHMENT0, gl2.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
-      const depthRb = gl2.getFramebufferAttachmentParameter(gl2.FRAMEBUFFER, gl2.DEPTH_ATTACHMENT, gl2.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer.handle);
+      const colorRb = gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+      const depthRb = gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       if (colorRb) {
-        gl2.deleteRenderbuffer(colorRb);
+        gl.deleteRenderbuffer(colorRb);
       }
       if (depthRb) {
-        gl2.deleteRenderbuffer(depthRb);
+        gl.deleteRenderbuffer(depthRb);
       }
-      gl2.deleteFramebuffer(msaaFrameBuffer.handle);
+      gl.deleteFramebuffer(msaaFrameBuffer.handle);
       const newMsaaFrameBuffer = createFramebufferMSAA(map2);
       props._2glMsaaFrameBuffer = newMsaaFrameBuffer;
       deck2.props._framebuffer = newMsaaFrameBuffer;
@@ -37191,22 +37204,24 @@ Erroneous line: <<${line}>>
     deck2.props._2gisData._2gisCurrentViewport = void 0;
   }
   function initDeck2gisProps(map2, deckProps) {
-    const gl2 = map2.getWebGLContext();
+    const gl = map2.getWebGLContext();
     const deck2gisProps = {
       parameters: {
-        depthMask: true,
-        depthTest: true,
+        depthWriteEnabled: true,
+        depthCompare: "less-equal",
         blend: true,
-        blendFunc: [gl2.SRC_ALPHA, gl2.ONE_MINUS_SRC_ALPHA, gl2.ONE, gl2.ONE_MINUS_SRC_ALPHA],
-        polygonOffsetFill: true,
-        depthFunc: gl2.LEQUAL,
-        blendEquation: gl2.FUNC_ADD
+        blendColorSrcFactor: "src-alpha",
+        blendColorDstFactor: "one-minus-src-alpha",
+        blendAlphaSrcFactor: "one",
+        blendAlphaDstFactor: "one-minus-src-alpha",
+        blendColorOperation: "add",
+        blendAlphaOperation: "add"
       },
       ...deckProps,
       _2gisData: {
         _2gisCustomLayers: /* @__PURE__ */ new Set(),
         _2gisMap: map2,
-        _2gisGL: gl2
+        _2gisGL: gl
       },
       _antialiasing: deckProps?.antialiasing || "none",
       _customRender: (reason) => {
@@ -37215,7 +37230,7 @@ Erroneous line: <<${line}>>
       views: [new MapView({ id: "2gis" })]
     };
     Object.assign(deck2gisProps, {
-      gl: gl2,
+      gl,
       width: null,
       height: null,
       touchAction: "unset",
@@ -37392,18 +37407,34 @@ Erroneous line: <<${line}>>
         return;
       }
       this.props.deck.glStateStore.useDeckWebglState();
-      const gl2 = this.gl;
+      const gl = this.gl;
+      try {
+        const layers = this.props.deck.layerManager?.layers;
+        if (layers) {
+          for (const composite of layers) {
+            const subs = composite.internalState?.subLayers;
+            if (!subs) continue;
+            for (const sub2 of subs) {
+              const model = sub2.state?.fillModel || sub2.state?.model;
+              if (model?.vertexArray?.indexBuffer) {
+                model.vertexArray.indexBuffer = null;
+              }
+            }
+          }
+        }
+      } catch (e2) {
+      }
       const mapSize = this.props.deck.props._2gisData._2gisMap.getSize();
       const clearColor = this.props?.parameters?.clearColor || [0, 0, 0];
       const { _2gisData } = this.props.deck.props;
       if (_2gisData._2gisFramestart) {
-        msaaFrameBuffer ? gl2.bindFramebuffer(gl2.FRAMEBUFFER, msaaFrameBuffer.handle) : renderTarget.bind(gl2);
-        this.clearColorDepth(gl2, clearColor);
+        msaaFrameBuffer ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer.handle) : renderTarget.bind(gl);
+        this.clearColorDepth(gl, clearColor);
         _2gisData._2gisCurrentViewport = void 0;
         _2gisData._2gisFramestart = false;
         if (this.props.deck.width !== mapSize[0] || this.props.deck.height !== mapSize[1]) {
           this.props.deck.animationLoop._resizeViewport();
-          gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
           onMapResize(
             this.props.deck.props._2gisData._2gisMap,
             this.props.deck
@@ -37412,10 +37443,10 @@ Erroneous line: <<${line}>>
           msaaFrameBuffer = this.props.deck.props._2glMsaaFrameBuffer;
         }
       } else {
-        msaaFrameBuffer ? gl2.bindFramebuffer(gl2.FRAMEBUFFER, msaaFrameBuffer.handle) : renderTarget.bind(gl2);
-        this.clearColor(gl2, clearColor);
+        msaaFrameBuffer ? gl.bindFramebuffer(gl.FRAMEBUFFER, msaaFrameBuffer.handle) : renderTarget.bind(gl);
+        this.clearColorDepth(gl, clearColor);
       }
-      renderTarget.unbind(gl2);
+      renderTarget.unbind(gl);
       const currentTarget = msaaFrameBuffer || renderTarget._lumaFramebuffer;
       const isDrawed = drawLayer(
         this.props.deck,
@@ -37430,39 +37461,39 @@ Erroneous line: <<${line}>>
       if (msaaFrameBuffer) {
         blitMsaaFrameBuffer(this.gl, this.props.deck.props);
       }
-      gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       const texture = renderTarget.getTexture();
-      texture.enable(gl2, 0);
-      program.enable(gl2);
+      texture.enable(gl, 0);
+      program.enable(gl);
       this.programmBinder();
-      gl2.viewport(
+      gl.viewport(
         0,
         0,
         Math.ceil(mapSize[0] * window.devicePixelRatio),
         Math.ceil(mapSize[1] * window.devicePixelRatio)
       );
-      const prevState = this.beforeDrawToMapWebGLState(gl2);
-      gl2.drawArrays(gl2.TRIANGLES, 0, 6);
-      this.restoreDrawToMapWebGLState(gl2, prevState);
+      const prevState = this.beforeDrawToMapWebGLState(gl);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      this.restoreDrawToMapWebGLState(gl, prevState);
       this.props.deck.glStateStore.useMapglWebglState();
     };
-    beforeDrawToMapWebGLState(gl2) {
-      const prevDepthMask = gl2.getParameter(gl2.DEPTH_WRITEMASK);
-      const prevBlend = gl2.isEnabled(gl2.BLEND);
-      const prevBlendFuncSep = gl2.getParameter(gl2.BLEND_SRC_RGB) + "," + gl2.getParameter(gl2.BLEND_DST_RGB) + "," + gl2.getParameter(gl2.BLEND_SRC_ALPHA) + "," + gl2.getParameter(gl2.BLEND_DST_ALPHA);
-      gl2.depthMask(false);
-      gl2.enable(gl2.BLEND);
-      gl2.blendFuncSeparate(gl2.SRC_ALPHA, gl2.ONE_MINUS_SRC_ALPHA, gl2.ONE, gl2.ONE_MINUS_SRC_ALPHA);
+    beforeDrawToMapWebGLState(gl) {
+      const prevDepthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
+      const prevBlend = gl.isEnabled(gl.BLEND);
+      const prevBlendFuncSep = gl.getParameter(gl.BLEND_SRC_RGB) + "," + gl.getParameter(gl.BLEND_DST_RGB) + "," + gl.getParameter(gl.BLEND_SRC_ALPHA) + "," + gl.getParameter(gl.BLEND_DST_ALPHA);
+      gl.depthMask(false);
+      gl.enable(gl.BLEND);
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       return { prevDepthMask, prevBlend, prevBlendFuncSep };
     }
-    restoreDrawToMapWebGLState(gl2, prevState) {
-      gl2.depthMask(prevState.prevDepthMask);
+    restoreDrawToMapWebGLState(gl, prevState) {
+      gl.depthMask(prevState.prevDepthMask);
       if (!prevState.prevBlend) {
-        gl2.disable(gl2.BLEND);
+        gl.disable(gl.BLEND);
       }
-      gl2.blendFuncSeparate(...prevState.prevBlendFuncSep.split(",").map(Number));
-      gl2.activeTexture(gl2.TEXTURE0);
-      gl2.bindTexture(gl2.TEXTURE_2D, null);
+      gl.blendFuncSeparate(...prevState.prevBlendFuncSep.split(",").map(Number));
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, null);
     }
     programmBinder() {
       const program = this.props?.deck?.props?._2glProgram;
@@ -37471,9 +37502,9 @@ Erroneous line: <<${line}>>
         return;
       }
       const mapSize = this.props.deck.props._2gisData._2gisMap.getSize();
-      const gl2 = this.gl;
+      const gl = this.gl;
       if (this.currentAntialiasingMode() === "fxaa") {
-        program.bind(gl2, {
+        program.bind(gl, {
           iResolution: [
             mapSize[0] * window.devicePixelRatio,
             mapSize[1] * window.devicePixelRatio
@@ -37482,29 +37513,29 @@ Erroneous line: <<${line}>>
           enabled: 1
         });
       } else {
-        program.bind(gl2, {
+        program.bind(gl, {
           u_sr2d_texture: 0
         });
       }
       vao.bind({
-        gl: gl2,
-        extensions: { OES_vertex_array_object: gl2.getExtension("OES_vertex_array_object") }
+        gl,
+        extensions: { OES_vertex_array_object: gl.getExtension("OES_vertex_array_object") }
       });
     }
     currentAntialiasingMode() {
       return (this.props?.deck.props).antialiasing;
     }
-    clearColor(gl2, clearColor) {
-      gl2.colorMask(true, true, true, true);
-      gl2.clearColor(clearColor[0], clearColor[1], clearColor[2], 0);
-      gl2.clear(gl2.COLOR_BUFFER_BIT);
+    clearColor(gl, clearColor) {
+      gl.colorMask(true, true, true, true);
+      gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
     }
-    clearColorDepth(gl2, clearColor) {
-      gl2.colorMask(true, true, true, true);
-      gl2.depthMask(true);
-      gl2.clearColor(clearColor[0], clearColor[1], clearColor[2], 0);
-      gl2.clearDepth(1);
-      gl2.clear(gl2.COLOR_BUFFER_BIT | gl2.DEPTH_BUFFER_BIT);
+    clearColorDepth(gl, clearColor) {
+      gl.colorMask(true, true, true, true);
+      gl.depthMask(true);
+      gl.clearColor(clearColor[0], clearColor[1], clearColor[2], 0);
+      gl.clearDepth(1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
   }
   if (typeof window !== "undefined") {
@@ -43115,29 +43146,16 @@ fragColor.g = outTexture.r / max(1.0, outTexture.a);
     pitch: 40,
     key: "4970330e-7f1c-4921-808c-0eb7c4e63001",
     webglVersion: 2,
-    // style: '913a859e-beb6-4b02-bfd6-33fb74b1f95f',
-    // style: '6203d2b1-57cf-4cae-9b6f-fd4fc6992dcc',
-    // style: 'fca6bcda-0f74-4c24-8399-2fd01b235031',
     forceSyncIdentify: true
   });
   window.map = map;
   let deck;
-  const gl = map.getWebGLContext();
-  gl.autoResetState = true;
-  map._impl.once("frameend", () => {
-  });
-  map.once(
-    "idle",
-    () => {
-      console.log("ADD LAYERS TO DECK", deck);
-    }
-  );
   console.log("INIT DECK", map);
-  setTimeout(() => {
-    deck = initDeck(map, Deck, { antialiasing: "none" });
+  deck = initDeck(map, Deck, { antialiasing: "msaa" });
+  map.once("styleload", () => {
     addDemoLayersDeckGL();
     console.log("ADD LAYERS TO DECK", deck);
-  }, 3e3);
+  });
   function addDemoLayersDeckGL() {
     const deckLayer1 = createHeatmapLayer(data);
     map.addLayer(deckLayer1);

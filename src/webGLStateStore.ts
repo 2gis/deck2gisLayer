@@ -2,10 +2,26 @@ import createStateStack from 'gl-state';
 import type { Map } from '@2gis/mapgl/types';
 
 export function initWebglStateStores(map: Map) {
-    const useDeckStorei = (gl: any) => {
+    const useDeckStorei = (gl: WebGL2RenderingContext & any) => {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
+        // MapGL может вызывать gl.enable/gl.disable через оригинальные (не Spy-обёрнутые)
+        // ссылки, а deck.gl/luma.gl через Spy — кэш luma.gl рассинхронизируется.
+        // Когда pipeline зовёт webglDevice.popState() (внутри withDeviceAndGLParameters),
+        // popState восстанавливает кэшированное значение через Spy, который считает его "новым"
+        // и применяет к реальному GL, перезаписывая наше состояние.
+        // Форсим синхронизацию luma Spy-кэша: обновляем gl.state.cache напрямую,
+        // после чего spy-вызовы (gl.enable/gl.disable через spy) увидят правильное состояние.
+        // gl.state.cache заполняется luma при инициализации WebGLStateTracker.
+        if (gl.state?.cache) {
+            gl.state.cache[gl.CULL_FACE] = false;
+            gl.state.cache[gl.DEPTH_TEST] = false;
+            gl.state.cache[gl.DEPTH_WRITEMASK] = false;
+        }
         gl.disable(gl.CULL_FACE);
+        gl.disable(gl.DEPTH_TEST);
+        gl.depthMask(false);
     };
 
     const gl = map.getWebGLContext();
