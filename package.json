@@ -1,6 +1,6 @@
 {
   "name": "@2gis/deck2gis-layer",
-  "version": "3.0.12",
+  "version": "3.0.13",
   "description": "",
   "main": "dist/deck2gislayer.js",
   "typings": "dist/types/index.d.ts",
