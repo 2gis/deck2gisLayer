@@ -14,7 +14,6 @@
     "prettier:fix": "prettier --write ."
   },
   "devDependencies": {
-    "@2gis/mapgl": "^1.70.1",
     "@types/node": "^25.3.3",
     "prettier": "^3.9.6",
     "typescript": "~5.9.3",
@@ -24,8 +23,13 @@
   "dependencies": {
     "@2gis/gl-matrix": "^2.4.6",
     "@deck.gl/core": "^9.2.10",
-    "deck.gl": "^9.2.10",
-    "gl-state": "^1.0.0",
-    "uniq": "^1.0.1"
-  }
+    "gl-state": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@2gis/mapgl": "^1.70.1"
+  },
+  "files": [
+    "dist/deck2gislayer.js",
+    "dist/types/**/*"
+  ]
 }

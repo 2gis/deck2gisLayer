@@ -186,7 +186,9 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
           const subs = composite.internalState?.subLayers;
           if (!subs) continue;
           for (const sub of subs) {
-            const model = sub.state?.fillModel || sub.state?.model;
+            // Only reset fillModel's index buffer (ColumnGeometry bug).
+            // PathLayer's model uses indices legitimately for line joins.
+            const model = sub.state?.fillModel;
             if (model?.vertexArray?.indexBuffer) {
               model.vertexArray.indexBuffer = null;
             }
@@ -299,7 +301,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     gl.depthMask(false);
     gl.enable(gl.BLEND);
     gl.blendFuncSeparate(
-      gl.SRC_ALPHA,
+      gl.ONE,
       gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE,
       gl.ONE_MINUS_SRC_ALPHA,
