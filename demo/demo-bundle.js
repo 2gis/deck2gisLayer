@@ -46009,7 +46009,7 @@ Erroneous line: <<${line}>>
             const subs = composite.internalState?.subLayers;
             if (!subs) continue;
             for (const sub2 of subs) {
-              const model = sub2.state?.fillModel || sub2.state?.model;
+              const model = sub2.state?.fillModel;
               if (model?.vertexArray?.indexBuffer) {
                 model.vertexArray.indexBuffer = null;
               }
@@ -46091,7 +46091,7 @@ Erroneous line: <<${line}>>
       gl.depthMask(false);
       gl.enable(gl.BLEND);
       gl.blendFuncSeparate(
-        gl.SRC_ALPHA,
+        gl.ONE,
         gl.ONE_MINUS_SRC_ALPHA,
         gl.ONE,
         gl.ONE_MINUS_SRC_ALPHA,

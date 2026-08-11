@@ -33,7 +33,7 @@ export function initDeck(
   deckProps?: DeckRenderProps,
 ): Deck {
   const deck = new Deck(initDeck2gisProps(map, deckProps));
-  console.info("Deck2GisLayers v3.13");
+  console.info("Deck2GisLayers v3.0.14");
   // Initialize WebGL state stores and set the initial state to deck's store
   // Должно вызываться сразу после создания deck, до любых операций с WebGL, чтобы гарантировать правильное состояние при первом рендере
   const stateStore = initWebglStateStores(map);
