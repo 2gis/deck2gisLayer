@@ -62,8 +62,6 @@ export default defineConfig(({ command, mode }) => {
           minify: false,
           rollupOptions: {
             input: "./demo/demo.ts",
-            // treat bare imports as external for demo build
-
             output: {
               format: "iife",
               name: "Demo",
