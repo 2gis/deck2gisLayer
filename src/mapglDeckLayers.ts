@@ -300,8 +300,11 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
       gl.getParameter(gl.BLEND_DST_ALPHA);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
+    // render target texture holds straight (non-premultiplied) alpha,
+    // so src factor must be SRC_ALPHA. ONE would double-color semi
+    // transparent pixels making fill colors oversaturated.
     gl.blendFuncSeparate(
-      gl.ONE,
+      gl.SRC_ALPHA,
       gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE,
       gl.ONE_MINUS_SRC_ALPHA,
