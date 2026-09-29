@@ -173,12 +173,13 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     const gl = this.gl;
 
     // ColumnGeometry (deck.gl) создаёт indices (Uint16Array) для extruded-режима.
-    // fillModel.setGeometry(geometry) привязывает их как indexBuffer,
-    // но fillModel.setIndexBuffer(null) может не очистить привязку.
-    // С triangle-strip + активный индексный буфер WebGL рисует через
-    // drawElementsInstanced вместо drawArrays — индексы не соответствуют
-    // порядку вершин triangle-strip, что приводит к артефактам отрисовки
-    // (часть граней гексагонов пропадает). Принудительно сбрасываем.
+    // fillModel.setGeometry(geometry) привязывает их как indexBuffer, но WebGL
+    // рисует triangle-strip только через drawArrays; при активном индексном буфере
+    // luma.gl переключается на drawElementsInstanced и использует индексы, которые
+    // не соответствуют порядку вершин triangle-strip → часть граней гексагонов
+    // пропадает. Принудительно сбрасываем привязку, НО только у неиндексированных
+    // (triangle-strip) моделей. У GridCellLayer/CubeGeometry индексы легитимны
+    // (topology === 'triangle-list'), и их сброс превращает кубики в треугольники.
     try {
       const layers = (this.props.deck as any).layerManager?.layers;
       if (layers) {
@@ -189,9 +190,12 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             // Only reset fillModel's index buffer (ColumnGeometry bug).
             // PathLayer's model uses indices legitimately for line joins.
             const model = sub.state?.fillModel;
-            if (model?.vertexArray?.indexBuffer) {
-              model.vertexArray.indexBuffer = null;
-            }
+            if (!model?.vertexArray?.indexBuffer) continue;
+            // Skip models that are genuinely indexed (e.g. CubeGeometry of
+            // GridCellLayer uses 'triangle-list'): clearing their index buffer
+            // renders a single clipped triangle per cell instead of a cube.
+            if (model.topology && model.topology !== 'triangle-strip') continue;
+            model.vertexArray.indexBuffer = null;
           }
         }
       }
@@ -202,7 +206,11 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     const mapSize = (
       this.props.deck.props as CustomRenderInternalProps
     )._2gisData._2gisMap.getSize();
-    const clearColor = (this.props as any)?.parameters?.clearColor || [0, 0, 0];
+    // The deck framebuffer must be cleared to white (not black) so that the
+    // semi-transparent edges of icons/fills blend toward white when the layer
+    // is composited with layer opacity. This matches the v2 (deck.gl 8)
+    // rendering; a black clear made icons look darker at partial opacity.
+    const clearColor = (this.props as any)?.parameters?.clearColor || [1, 1, 1];
     const { _2gisData } = this.props.deck.props as CustomRenderInternalProps;
 
     if (_2gisData._2gisFramestart) {
