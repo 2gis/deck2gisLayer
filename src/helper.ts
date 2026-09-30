@@ -33,7 +33,7 @@ export function initDeck(
   deckProps?: DeckRenderProps,
 ): Deck {
   const deck = new Deck(initDeck2gisProps(map, deckProps));
-  console.info("Deck2GisLayers v3.0.17");
+  console.info("Deck2GisLayers v3.0.18");
   // Initialize WebGL state stores and set the initial state to deck's store
   // Должно вызываться сразу после создания deck, до любых операций с WebGL, чтобы гарантировать правильное состояние при первом рендере
   const stateStore = initWebglStateStores(map);
@@ -233,17 +233,34 @@ export function drawLayer(
   layer: Deck2gisLayer<any>,
   target?: any,
 ): boolean {
-  let currentViewport = (deck.props as CustomRenderInternalProps)._2gisData
-    ._2gisCurrentViewport;
-  if (!currentViewport) {
-    currentViewport = getViewport(map);
-    (deck.props as CustomRenderInternalProps)._2gisData._2gisCurrentViewport =
-      currentViewport;
-  }
-
   if (!isIncludeLayer(deck, layer)) {
     return false;
   }
+
+  const data = (deck.props as CustomRenderInternalProps)._2gisData;
+  const currentViewport = getViewport(map);
+  if (!currentViewport) {
+    return false;
+  }
+  data._2gisCurrentViewport = currentViewport;
+
+  // The plugin drives rendering manually from the map's frame instead of the
+  // deck.gl animation loop, which also runs the layer update cycle before
+  // drawing. Composite layers such as HeatmapLayer regenerate their geometry
+  // from the active layer viewport during that cycle, and deck.gl deliberately
+  // defers composite updates triggered by a viewport change to the next frame
+  // (see Layer.activateViewport / `setNeedsUpdate`). Without flushing the cycle
+  // here the aggregation layer is drawn with the previous frame's viewport —
+  // visible as the heatmap lagging one frame behind while panning/zooming.
+  const layerManager = (deck as any).layerManager;
+  if (layerManager) {
+    layerManager.activateViewport?.(currentViewport);
+    for (const deckLayer of layerManager.layers || []) {
+      deckLayer.activateViewport?.(currentViewport);
+    }
+    layerManager.updateLayers?.();
+  }
+
   deck._drawLayers("2gis-repaint", {
     target,
     viewports: [currentViewport],

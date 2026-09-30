@@ -36758,7 +36758,7 @@ Erroneous line: <<${line}>>
   }
   function initDeck(map2, Deck2, deckProps) {
     const deck2 = new Deck2(initDeck2gisProps(map2, deckProps));
-    console.info("Deck2GisLayers v3.0.17-f1");
+    console.info("Deck2GisLayers v3.0.18");
     const stateStore = initWebglStateStores(map2);
     deck2.glStateStore = stateStore;
     deck2.glStateStore.useDeckWebglState();
@@ -36887,13 +36887,22 @@ Erroneous line: <<${line}>>
     updateLayers(deck2);
   }
   function drawLayer(deck2, map2, layer, target) {
-    let currentViewport = deck2.props._2gisData._2gisCurrentViewport;
-    if (!currentViewport) {
-      currentViewport = getViewport(map2);
-      deck2.props._2gisData._2gisCurrentViewport = currentViewport;
-    }
     if (!isIncludeLayer(deck2, layer)) {
       return false;
+    }
+    const data2 = deck2.props._2gisData;
+    const currentViewport = getViewport(map2);
+    if (!currentViewport) {
+      return false;
+    }
+    data2._2gisCurrentViewport = currentViewport;
+    const layerManager = deck2.layerManager;
+    if (layerManager) {
+      layerManager.activateViewport?.(currentViewport);
+      for (const deckLayer of layerManager.layers || []) {
+        deckLayer.activateViewport?.(currentViewport);
+      }
+      layerManager.updateLayers?.();
     }
     deck2._drawLayers("2gis-repaint", {
       target,
