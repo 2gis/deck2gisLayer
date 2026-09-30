@@ -210,7 +210,24 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
     // semi-transparent edges of icons/fills blend toward white when the layer
     // is composited with layer opacity. This matches the v2 (deck.gl 8)
     // rendering; a black clear made icons look darker at partial opacity.
-    const clearColor = (this.props as any)?.parameters?.clearColor || [1, 1, 1];
+    //
+    // Exception: layers that combine colors with a non-compositing operation
+    // treat the clear value as an actual accumulated value, so it must be the
+    // identity element of that operation rather than a background:
+    //   - max / subtract / reverse-subtract -> identity is 0 (black)
+    //   - min                              -> identity is 1 (white)
+    // A white clear under `max` saturates the accumulation and the layer
+    // renders white — e.g. HeatmapLayer (pro-ui passes
+    // `blendColorOperation: 'max'`).
+    const blendColorOperation = (this.props as any)?.parameters
+      ?.blendColorOperation;
+    const isNonAdditiveBlend =
+      blendColorOperation === "max" ||
+      blendColorOperation === "subtract" ||
+      blendColorOperation === "reverse-subtract";
+    const defaultClearColor = isNonAdditiveBlend ? [0, 0, 0] : [1, 1, 1];
+    const clearColor =
+      (this.props as any)?.parameters?.clearColor || defaultClearColor;
     const { _2gisData } = this.props.deck.props as CustomRenderInternalProps;
 
     if (_2gisData._2gisFramestart) {
