@@ -194,7 +194,7 @@ export class Deck2gisLayer<LayerT extends Layer> implements DeckCustomLayer {
             // Skip models that are genuinely indexed (e.g. CubeGeometry of
             // GridCellLayer uses 'triangle-list'): clearing their index buffer
             // renders a single clipped triangle per cell instead of a cube.
-            if (model.topology && model.topology !== 'triangle-strip') continue;
+            if (model.topology && model.topology !== "triangle-strip") continue;
             model.vertexArray.indexBuffer = null;
           }
         }

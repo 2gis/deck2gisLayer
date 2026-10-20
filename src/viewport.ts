@@ -89,30 +89,19 @@ function fovCorrection(map: Map, fovy: number, needCorrect?: boolean) {
   if (!needCorrect) {
     return fovy;
   }
-  const cameraConfig = { fov: fovy, near: 1000 };
-  const { fov } = cameraConfig;
-  const height = correctViewAndSize((map as any)._impl.state);
-  if (height > 100) {
-    return (100 / height) * fov;
-  }
-  return fovy;
-}
-
-function correctViewAndSize(state: any) {
-  const { size, pitch, padding } = state;
-
-  const correctedPaddingTopScreen =
-    Math.max(0, padding.top - padding.bottom) * Math.tan(pitch);
-  const correctedScreenHeightWithPadding =
-    correctScreenHeight(size[1]) + correctedPaddingTopScreen;
-
+  const cameraFovRad =
+    (map as any)._impl.core?.state?.cameraConfig?.fov ??
+    (map as any)._impl.state?.cameraConfig?.fov ??
+    (fovy * Math.PI) / 180;
+  const height = map.getSize()[1];
+  // 2GIS clamps the effective screen height used for the camera fov to a
+  // minimum of 1000px: tan(fov/2)_eff = tan(fov/2) * height / max(height, 1000).
+  // deck.gl makes the requested fovy wider through the same minimum-1000px
+  // screen height rule, so requesting the exact same *effective* fov here
+  // makes deck's uncentered perspective match the 2GIS camera.
   return (
-    (padding.bottom - padding.top) / 2 +
-    (correctedScreenHeightWithPadding - size[1]) / 2
+    2 *
+    Math.atan((Math.tan(cameraFovRad / 2) * height) / Math.max(height, 1000)) *
+    (180 / Math.PI)
   );
-}
-
-function correctScreenHeight(height: number): number {
-  const minCalculationScreenHeight = 1000;
-  return Math.max(height, minCalculationScreenHeight);
 }
